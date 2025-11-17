@@ -1,0 +1,224 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useCategories } from '@/hooks/useCategories';
+import { Loader } from '@/components/ui/Loader';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { Layers, Plus, Edit, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '@/lib/axios';
+import { useQueryClient } from '@tanstack/react-query';
+
+export const AdminCategories = () => {
+  const { data: categories, isLoading } = useCategories();
+  const queryClient = useQueryClient();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    image: '',
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleOpenModal = (category?: any) => {
+    if (category) {
+      setEditingCategory(category);
+      setFormData({
+        name: category.name,
+        description: category.description || '',
+        image: category.image || '',
+      });
+    } else {
+      setEditingCategory(null);
+      setFormData({
+        name: '',
+        description: '',
+        image: '',
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingCategory(null);
+    setFormData({
+      name: '',
+      description: '',
+      image: '',
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      if (editingCategory) {
+        await api.put(`/categories/${editingCategory._id}`, formData);
+        toast.success('Category updated successfully');
+      } else {
+        await api.post('/categories', formData);
+        toast.success('Category created successfully');
+      }
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      handleCloseModal();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save category');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this category?')) {
+      try {
+        await api.delete(`/categories/${id}`);
+        toast.success('Category deleted successfully');
+        queryClient.invalidateQueries({ queryKey: ['categories'] });
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Failed to delete category');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">Manage Categories</h1>
+              <p className="text-gray-600 dark:text-gray-400">{categories?.length || 0} total categories</p>
+            </div>
+            <Button onClick={() => handleOpenModal()}>
+              <Plus className="w-5 h-5 mr-2" />
+              Add Category
+            </Button>
+          </div>
+        </motion.div>
+
+        {!categories || categories.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl"
+          >
+            <Layers className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">No categories yet</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first category to organize products</p>
+            <Button onClick={() => handleOpenModal()}>
+              <Plus className="w-5 h-5 mr-2" />
+              Add Category
+            </Button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category: any, index: number) => (
+              <motion.div
+                key={category._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden group hover:shadow-lg transition-shadow"
+              >
+                <div className="aspect-video bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                  <img
+                    src={category.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                    alt={category.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{category.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                    {category.description || 'No description'}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleOpenModal(category)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => handleDelete(category._id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Add/Edit Category Modal */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          title={editingCategory ? 'Edit Category' : 'Add Category'}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Category Name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <Input
+              label="Image URL"
+              name="image"
+              value={formData.image}
+              onChange={handleInputChange}
+              placeholder="https://example.com/image.jpg"
+            />
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" className="flex-1">
+                {editingCategory ? 'Update Category' : 'Create Category'}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleCloseModal} className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      </div>
+    </div>
+  );
+};

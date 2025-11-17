@@ -10,67 +10,25 @@ import { Home } from './pages/Home';
 import { Products } from './pages/Products';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ProductDetail } from './pages/ProductDetail';
+import { Cart } from './pages/Cart';
+import { Checkout } from './pages/Checkout';
+import { Profile } from './pages/Profile';
+import { OrderHistory } from './pages/OrderHistory';
 
-// Placeholder pages (to be built)
-const ProductDetailPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Product Detail Page</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
-    </div>
-  </div>
-);
+// Admin Pages
+import { AdminDashboard } from './pages/admin/Dashboard';
+import { AdminOrders } from './pages/admin/Orders';
+import { AdminProducts } from './pages/admin/Products';
+import { AdminCategories } from './pages/admin/Categories';
+import { AdminUsers } from './pages/admin/Users';
 
-const CartPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Cart Page</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
-    </div>
-  </div>
-);
-
-const CheckoutPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Checkout Page</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
-    </div>
-  </div>
-);
-
-const ProfilePage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Profile Page</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
-    </div>
-  </div>
-);
-
-const OrderHistoryPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Order History</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
-    </div>
-  </div>
-);
-
-const AdminDashboardPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Admin Dashboard</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
-    </div>
-  </div>
-);
-
+// Placeholder pages
 const CategoriesPage = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
       <h1 className="text-4xl font-bold mb-4">Categories</h1>
-      <p className="text-gray-600 dark:text-gray-400">To be implemented</p>
+      <p className="text-gray-600 dark:text-gray-400">Browse products by category</p>
     </div>
   </div>
 );
@@ -114,25 +72,25 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
-            <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
 
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
             {/* User Routes */}
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/orders" element={<OrderHistoryPage />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<OrderHistory />} />
 
             {/* Admin Routes */}
-            <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/admin/products" element={<AdminDashboardPage />} />
-            <Route path="/admin/orders" element={<AdminDashboardPage />} />
-            <Route path="/admin/categories" element={<AdminDashboardPage />} />
-            <Route path="/admin/users" element={<AdminDashboardPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
