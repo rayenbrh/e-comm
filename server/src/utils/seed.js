@@ -11,26 +11,31 @@ dotenv.config();
 const categories = [
   {
     name: 'Electronics',
+    slug: 'electronics',
     description: 'Latest electronic gadgets and devices',
     image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500',
   },
   {
     name: 'Fashion',
+    slug: 'fashion',
     description: 'Trendy clothing and accessories',
     image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=500',
   },
   {
     name: 'Home & Living',
+    slug: 'home-living',
     description: 'Beautiful home decor and furniture',
     image: 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500',
   },
   {
     name: 'Sports & Outdoors',
+    slug: 'sports-outdoors',
     description: 'Gear for your active lifestyle',
     image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500',
   },
   {
     name: 'Books',
+    slug: 'books',
     description: 'Discover your next great read',
     image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=500',
   },
