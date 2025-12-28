@@ -109,7 +109,17 @@ export const getProducts = async (req, res) => {
  */
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category', 'name slug');
+    const { id } = req.params;
+    
+    // Validate MongoDB ObjectId format
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid product ID format',
+      });
+    }
+
+    const product = await Product.findById(id).populate('category', 'name slug');
 
     if (!product) {
       return res.status(404).json({
@@ -127,6 +137,7 @@ export const getProductById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching product',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -138,7 +149,7 @@ export const getProductById = async (req, res) => {
  */
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, images, stock, sku, tags, featured } = req.body;
+    const { name, description, price, oldPrice, promoPrice, category, images, stock, sku, tags, featured } = req.body;
 
     // Verify category exists
     const categoryExists = await Category.findById(category);
@@ -149,12 +160,27 @@ export const createProduct = async (req, res) => {
       });
     }
 
+    // Handle uploaded images
+    let imagePaths = [];
+    if (req.files && req.files.length > 0) {
+      imagePaths = req.files.map(file => `/uploads/${file.filename}`);
+    } else if (images) {
+      // Support both uploaded files and URL strings
+      const imageArray = Array.isArray(images) ? images : images.split(',').map((url) => url.trim()).filter((url) => url);
+      imagePaths = imageArray;
+    }
+
+    // Determine the actual price to use (promoPrice takes precedence, otherwise use price)
+    const finalPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : parseFloat(price);
+
     const product = await Product.create({
       name,
       description,
-      price,
+      price: finalPrice,
+      oldPrice: oldPrice && oldPrice > 0 ? parseFloat(oldPrice) : null,
+      promoPrice: promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null,
       category,
-      images: images || [],
+      images: imagePaths,
       stock,
       sku,
       tags: tags || [],
@@ -184,7 +210,7 @@ export const createProduct = async (req, res) => {
  */
 export const updateProduct = async (req, res) => {
   try {
-    const { name, description, price, category, images, stock, sku, tags, featured, rating } = req.body;
+    const { name, description, price, oldPrice, promoPrice, category, images, stock, sku, tags, featured, rating } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -206,12 +232,27 @@ export const updateProduct = async (req, res) => {
       }
     }
 
+    // Handle uploaded images
+    if (req.files && req.files.length > 0) {
+      const newImagePaths = req.files.map(file => `/uploads/${file.filename}`);
+      // Merge with existing images or replace
+      product.images = [...(product.images || []), ...newImagePaths];
+    } else if (images !== undefined) {
+      // Support both uploaded files and URL strings
+      const imageArray = Array.isArray(images) ? images : images.split(',').map((url) => url.trim()).filter((url) => url);
+      product.images = imageArray;
+    }
+
+    // Determine the actual price to use
+    const finalPrice = promoPrice && promoPrice > 0 ? promoPrice : (price !== undefined ? price : product.price);
+
     // Update fields
     if (name) product.name = name;
     if (description) product.description = description;
-    if (price !== undefined) product.price = price;
+    if (price !== undefined || promoPrice !== undefined) product.price = finalPrice;
+    if (oldPrice !== undefined) product.oldPrice = oldPrice && oldPrice > 0 ? parseFloat(oldPrice) : null;
+    if (promoPrice !== undefined) product.promoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
     if (category) product.category = category;
-    if (images) product.images = images;
     if (stock !== undefined) product.stock = stock;
     if (sku) product.sku = sku;
     if (tags) product.tags = tags;

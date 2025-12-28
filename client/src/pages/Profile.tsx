@@ -101,7 +101,7 @@ export const Profile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-[#2d2838]"
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Personal Information</h2>
@@ -236,7 +236,7 @@ export const Profile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-[#2d2838]"
           >
             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Change Password</h2>
             <form onSubmit={handleChangePassword}>
@@ -280,7 +280,7 @@ export const Profile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-[#2d2838]"
           >
             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Account Actions</h2>
             <div className="flex flex-col sm:flex-row gap-4">

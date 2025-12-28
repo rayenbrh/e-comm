@@ -6,7 +6,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { Package, Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const AdminProducts = () => {
@@ -24,6 +24,8 @@ export const AdminProducts = () => {
     name: '',
     description: '',
     price: '',
+    oldPrice: '',
+    promoPrice: '',
     stock: '',
     category: '',
     sku: '',
@@ -31,6 +33,8 @@ export const AdminProducts = () => {
     tags: '',
     featured: false,
   });
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const products = productsData?.products || [];
 
@@ -46,6 +50,8 @@ export const AdminProducts = () => {
         name: product.name,
         description: product.description,
         price: product.price.toString(),
+        oldPrice: product.oldPrice?.toString() || '',
+        promoPrice: product.promoPrice?.toString() || '',
         stock: product.stock.toString(),
         category: product.category?._id || product.category || '',
         sku: product.sku,
@@ -53,12 +59,16 @@ export const AdminProducts = () => {
         tags: product.tags?.join(', ') || '',
         featured: product.featured || false,
       });
+      setImagePreviews(product.images || []);
+      setSelectedImages([]);
     } else {
       setEditingProduct(null);
       setFormData({
         name: '',
         description: '',
         price: '',
+        oldPrice: '',
+        promoPrice: '',
         stock: '',
         category: '',
         sku: '',
@@ -66,6 +76,8 @@ export const AdminProducts = () => {
         tags: '',
         featured: false,
       });
+      setImagePreviews([]);
+      setSelectedImages([]);
     }
     setIsModalOpen(true);
   };
@@ -77,6 +89,7 @@ export const AdminProducts = () => {
       name: '',
       description: '',
       price: '',
+      promoPrice: '',
       stock: '',
       category: '',
       sku: '',
@@ -84,28 +97,78 @@ export const AdminProducts = () => {
       tags: '',
       featured: false,
     });
+    setImagePreviews([]);
+    setSelectedImages([]);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles: File[] = [];
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image file`);
+        return;
+      }
+      validFiles.push(file);
+    });
+
+    if (validFiles.length > 0) {
+      setSelectedImages(prev => [...prev, ...validFiles]);
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const isNewImage = index >= (editingProduct?.images?.length || 0);
+    if (isNewImage) {
+      const adjustedIndex = index - (editingProduct?.images?.length || 0);
+      setSelectedImages(prev => prev.filter((_, i) => i !== adjustedIndex));
+    }
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const productData = {
-      name: formData.name,
-      description: formData.description,
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
-      category: formData.category,
-      sku: formData.sku,
-      images: formData.images.split(',').map((url) => url.trim()).filter((url) => url),
-      tags: formData.tags.split(',').map((tag) => tag.trim()).filter((tag) => tag),
-      featured: formData.featured,
-    };
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('price', formData.price);
+    if (formData.oldPrice) formDataToSend.append('oldPrice', formData.oldPrice);
+    if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
+    formDataToSend.append('stock', formData.stock);
+    formDataToSend.append('category', formData.category);
+    formDataToSend.append('tags', formData.tags);
+    formDataToSend.append('featured', formData.featured.toString());
+
+    // Add existing images if editing (keep images that are still in previews)
+    if (editingProduct && editingProduct.images && editingProduct.images.length > 0) {
+      const existingImages = imagePreviews.filter(preview => 
+        editingProduct.images.includes(preview)
+      );
+      if (existingImages.length > 0) {
+        formDataToSend.append('images', JSON.stringify(existingImages));
+      }
+    }
+
+    // Add new uploaded images
+    selectedImages.forEach(file => {
+      formDataToSend.append('productImages', file);
+    });
 
     try {
       if (editingProduct) {
-        await updateProduct.mutateAsync({ id: editingProduct._id, data: productData });
+        await updateProduct.mutateAsync({ id: editingProduct._id, formData: formDataToSend });
       } else {
-        await createProduct.mutateAsync(productData);
+        await createProduct.mutateAsync(formDataToSend);
       }
       handleCloseModal();
     } catch (error) {
@@ -169,7 +232,7 @@ export const AdminProducts = () => {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
         </motion.div>
@@ -179,11 +242,11 @@ export const AdminProducts = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="bg-white dark:bg-[#3a0f17] rounded-xl shadow-sm border border-gray-200 dark:border-[#2d2838] overflow-hidden"
         >
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/50">
+              <thead className="bg-gray-50 dark:bg-burgundy-700/50">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Product</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">SKU</th>
@@ -220,7 +283,7 @@ export const AdminProducts = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{product.sku}</td>
-                      <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">${product.price.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">{product.price.toFixed(2)} TND</td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -241,7 +304,7 @@ export const AdminProducts = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleOpenModal(product)}
-                            className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                            className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-[#1E0007]/30 rounded-lg transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -262,7 +325,7 @@ export const AdminProducts = () => {
         </motion.div>
 
         {/* Add/Edit Product Modal */}
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingProduct ? 'Edit Product' : 'Add Product'}>
+        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingProduct ? 'Edit Product' : 'Add Product'} size="xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Product Name"
@@ -281,12 +344,12 @@ export const AdminProducts = () => {
                 onChange={handleInputChange}
                 required
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Price"
+                label="Price (TND)"
                 type="number"
                 step="0.01"
                 name="price"
@@ -295,6 +358,17 @@ export const AdminProducts = () => {
                 required
               />
               <Input
+                label="Old Price (TND) - Optional"
+                type="number"
+                step="0.01"
+                name="oldPrice"
+                value={formData.oldPrice}
+                onChange={handleInputChange}
+                placeholder="Original price before discount"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
                 label="Stock"
                 type="number"
                 name="stock"
@@ -302,14 +376,16 @@ export const AdminProducts = () => {
                 onChange={handleInputChange}
                 required
               />
+              <Input
+                label="Promo Price (TND) - Optional"
+                type="number"
+                step="0.01"
+                name="promoPrice"
+                value={formData.promoPrice}
+                onChange={handleInputChange}
+                placeholder="Discounted price"
+              />
             </div>
-            <Input
-              label="SKU"
-              name="sku"
-              value={formData.sku}
-              onChange={handleInputChange}
-              required
-            />
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
@@ -319,7 +395,7 @@ export const AdminProducts = () => {
                 value={formData.category}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="">Select a category</option>
                 {categories?.map((cat: any) => (
@@ -329,13 +405,56 @@ export const AdminProducts = () => {
                 ))}
               </select>
             </div>
-            <Input
-              label="Image URLs (comma-separated)"
-              name="images"
-              value={formData.images}
-              onChange={handleInputChange}
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Product Images
+              </label>
+              <div className="flex items-center gap-4 mb-2">
+                <label
+                  htmlFor="product-images-input"
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                >
+                  <Upload className="w-5 h-5" />
+                  <span>Choose Images</span>
+                </label>
+                <input
+                  id="product-images-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                {selectedImages.length > 0 && (
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedImages.length} file(s) selected
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Select one or more image files (JPEG, PNG, GIF, or WebP).
+              </p>
+              {imagePreviews.length > 0 && (
+                <div className="grid grid-cols-3 gap-4">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-burgundy-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <Input
               label="Tags (comma-separated)"
               name="tags"

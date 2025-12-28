@@ -11,7 +11,8 @@ import toast from 'react-hot-toast';
 
 export const Checkout = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart } = useCartStore();
+  const total = getTotalPrice();
   const { user } = useAuthStore();
   const createOrder = useCreateOrder();
 
@@ -26,12 +27,6 @@ export const Checkout = () => {
     city: user?.address?.city || '',
     postalCode: user?.address?.postalCode || '',
     country: user?.address?.country || '',
-
-    // Payment Info (demo only)
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: '',
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -56,15 +51,15 @@ export const Checkout = () => {
       // Prepare order data
       const orderData = {
         items: items.map((item) => ({
-          product: item._id,
-          name: item.name,
+          product: item.product._id,
+          name: item.product.name,
           quantity: item.quantity,
-          price: item.price,
-          image: item.images?.[0] || '',
+          price: item.product.price,
+          image: item.product.images?.[0] || '',
         })),
         subtotal: total,
-        shippingCost: total >= 50 ? 0 : 9.99,
-        total: total + (total >= 50 ? 0 : 9.99),
+        shippingCost: total >= 150 ? 0 : 25,
+        total: total + (total >= 150 ? 0 : 25),
         shippingAddress: {
           name: formData.name,
           email: formData.email,
@@ -78,15 +73,12 @@ export const Checkout = () => {
 
       await createOrder.mutateAsync(orderData);
 
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
       setOrderSuccess(true);
       clearCart();
 
-      // Redirect to orders page after success
+      // Redirect to home page after success
       setTimeout(() => {
-        navigate('/orders');
+        navigate('/');
       }, 3000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to process order');
@@ -118,15 +110,15 @@ export const Checkout = () => {
           </motion.div>
           <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Order Placed Successfully!</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Thank you for your purchase. You will receive an email confirmation shortly.
+            Thank you for your order! We will contact you shortly to confirm your delivery. Payment will be collected upon delivery.
           </p>
-          <Button onClick={() => navigate('/orders')}>View Your Orders</Button>
+          <Button onClick={() => navigate('/')}>Continue Shopping</Button>
         </motion.div>
       </div>
     );
   }
 
-  const shippingCost = total >= 50 ? 0 : 9.99;
+  const shippingCost = total >= 150 ? 0 : 25;
   const finalTotal = total + shippingCost;
 
   return (
@@ -150,7 +142,7 @@ export const Checkout = () => {
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-[#2d2838]"
               >
                 <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Contact Information</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -189,7 +181,7 @@ export const Checkout = () => {
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-[#2d2838]"
               >
                 <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Shipping Address</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -230,59 +222,41 @@ export const Checkout = () => {
                 </div>
               </motion.div>
 
-              {/* Payment Information */}
+              {/* Payment Method */}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-sm border border-gray-200 dark:border-[#2d2838]"
               >
                 <div className="flex items-center gap-2 mb-6">
                   <CreditCard className="w-6 h-6 text-gray-900 dark:text-white" />
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Information</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Payment Method</h2>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label="Card Number"
-                    name="cardNumber"
-                    value={formData.cardNumber}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="4242 4242 4242 4242"
-                    className="sm:col-span-2"
-                    maxLength={19}
-                  />
-                  <Input
-                    label="Cardholder Name"
-                    name="cardName"
-                    value={formData.cardName}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="John Doe"
-                    className="sm:col-span-2"
-                  />
-                  <Input
-                    label="Expiry Date"
-                    name="expiryDate"
-                    value={formData.expiryDate}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="MM/YY"
-                    maxLength={5}
-                  />
-                  <Input
-                    label="CVV"
-                    name="cvv"
-                    value={formData.cvv}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="123"
-                    maxLength={4}
-                  />
-                </div>
-                <div className="mt-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Lock className="w-4 h-4" />
-                  <span>Your payment information is secure and encrypted</span>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-green-900 dark:text-green-100 mb-2">
+                        Cash on Delivery
+                      </h3>
+                      <p className="text-green-700 dark:text-green-300 text-sm mb-3">
+                        Pay with cash when your order is delivered to your doorstep. No online payment required!
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Safe and convenient payment method</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -294,23 +268,23 @@ export const Checkout = () => {
               transition={{ delay: 0.2 }}
               className="lg:col-span-1"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 sticky top-8">
+              <div className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-[#2d2838] sticky top-8">
                 <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Order Summary</h2>
 
                 {/* Order Items */}
                 <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                   {items.map((item) => (
-                    <div key={item._id} className="flex gap-4">
+                    <div key={item.product._id} className="flex gap-4">
                       <img
-                        src={item.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
-                        alt={item.name}
-                        className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-gray-700"
+                        src={item.product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                        alt={item.product.name}
+                        className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-burgundy-700"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.name}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.product.name}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Qty: {item.quantity}</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                          ${(item.price * item.quantity).toFixed(2)}
+                        <p className="text-sm font-semibold text-[#510013] dark:text-burgundy-500">
+                          {(item.product.price * item.quantity).toFixed(2)} TND
                         </p>
                       </div>
                     </div>
@@ -318,10 +292,10 @@ export const Checkout = () => {
                 </div>
 
                 {/* Pricing */}
-                <div className="space-y-3 mb-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="space-y-3 mb-6 pt-4 border-t border-gray-200 dark:border-[#2d2838]">
                   <div className="flex justify-between text-gray-600 dark:text-gray-400">
                     <span>Subtotal</span>
-                    <span className="font-medium text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+                    <span className="font-medium text-[#510013] dark:text-white">{total.toFixed(2)} TND</span>
                   </div>
                   <div className="flex justify-between text-gray-600 dark:text-gray-400">
                     <span>Shipping</span>
@@ -329,14 +303,14 @@ export const Checkout = () => {
                       {shippingCost === 0 ? (
                         <span className="text-green-600 dark:text-green-400">FREE</span>
                       ) : (
-                        `$${shippingCost.toFixed(2)}`
+                        `${shippingCost.toFixed(2)} TND`
                       )}
                     </span>
                   </div>
-                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <div className="pt-3 border-t border-gray-200 dark:border-[#2d2838]">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-semibold text-gray-900 dark:text-white">Total</span>
-                      <span className="text-3xl font-bold text-gradient">${finalTotal.toFixed(2)}</span>
+                      <span className="text-3xl font-bold text-[#510013] dark:text-white">{finalTotal.toFixed(2)} TND</span>
                     </div>
                   </div>
                 </div>
@@ -351,36 +325,36 @@ export const Checkout = () => {
                   {isProcessing ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Processing...
+                      Placing Order...
                     </>
                   ) : (
                     <>
-                      <Lock className="w-5 h-5 mr-2" />
-                      Place Order
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Confirm Order (Cash on Delivery)
                     </>
                   )}
                 </Button>
 
                 {/* Trust Info */}
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#2d2838]">
                   <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span>Secure SSL encryption</span>
+                      <span>Cash on delivery available</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span>Money-back guarantee</span>
+                      <span>Easy returns & refunds</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span>24/7 customer support</span>
+                      <span>Customer support available</span>
                     </div>
                   </div>
                 </div>

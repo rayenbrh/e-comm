@@ -6,13 +6,14 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 
 export const Cart = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, removeItem, clearCart, total } = useCartStore();
+  const { items, updateQuantity, removeFromCart, clearCart, getTotalPrice } = useCartStore();
+  const total = getTotalPrice();
 
   const handleQuantityChange = (id: string, delta: number) => {
-    const item = items.find((i) => i._id === id);
+    const item = items.find((i) => i.product._id === id);
     if (item) {
       const newQuantity = item.quantity + delta;
-      if (newQuantity > 0 && newQuantity <= item.stock) {
+      if (newQuantity > 0 && newQuantity <= item.product.stock) {
         updateQuantity(id, newQuantity);
       }
     }
@@ -30,7 +31,7 @@ export const Cart = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-gray-100 dark:bg-gray-800 rounded-full"
+            className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-gray-100 dark:bg-[#3a0f17] rounded-full"
           >
             <ShoppingBag className="w-12 h-12 text-gray-400" />
           </motion.div>
@@ -46,7 +47,7 @@ export const Cart = () => {
     );
   }
 
-  const shippingCost = total >= 50 ? 0 : 9.99;
+  const shippingCost = total >= 150 ? 0 : 25;
   const finalTotal = total + shippingCost;
 
   return (
@@ -67,24 +68,24 @@ export const Cart = () => {
             <AnimatePresence mode="popLayout">
               {items.map((item, index) => (
                 <motion.div
-                  key={item._id}
+                  key={item.product._id}
                   layout
                   initial={{ opacity: 0, x: -50 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 50, height: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 mb-4 shadow-sm border border-gray-200 dark:border-gray-700"
+                  className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 mb-4 shadow-sm border border-gray-200 dark:border-[#2d2838]"
                 >
                   <div className="flex gap-6">
                     {/* Product Image */}
-                    <Link to={`/products/${item._id}`} className="flex-shrink-0">
+                    <Link to={`/products/${item.product._id}`} className="flex-shrink-0">
                       <motion.div
                         whileHover={{ scale: 1.05 }}
-                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700"
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-burgundy-700"
                       >
                         <img
-                          src={item.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
-                          alt={item.name}
+                          src={item.product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                          alt={item.product.name}
                           className="w-full h-full object-cover"
                         />
                       </motion.div>
@@ -93,13 +94,13 @@ export const Cart = () => {
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start mb-2">
-                        <Link to={`/products/${item._id}`}>
+                        <Link to={`/products/${item.product._id}`}>
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate">
-                            {item.name}
+                            {item.product.name}
                           </h3>
                         </Link>
                         <motion.button
-                          onClick={() => removeItem(item._id)}
+                          onClick={() => removeFromCart(item.product._id)}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           className="text-red-500 hover:text-red-600 dark:hover:text-red-400 p-2"
@@ -109,18 +110,18 @@ export const Cart = () => {
                       </div>
 
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">
-                        {item.description}
+                        {item.product.description}
                       </p>
 
                       <div className="flex items-center justify-between">
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Qty:</span>
-                          <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
+                          <div className="flex items-center border border-gray-300 dark:border-burgundy-600 rounded-lg">
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
-                              onClick={() => handleQuantityChange(item._id, -1)}
+                              onClick={() => handleQuantityChange(item.product._id, -1)}
                               className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                               disabled={item.quantity <= 1}
                             >
@@ -132,14 +133,14 @@ export const Cart = () => {
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
-                              onClick={() => handleQuantityChange(item._id, 1)}
+                              onClick={() => handleQuantityChange(item.product._id, 1)}
                               className="px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                              disabled={item.quantity >= item.stock}
+                              disabled={item.quantity >= item.product.stock}
                             >
                               <Plus className="w-4 h-4" />
                             </motion.button>
                           </div>
-                          {item.quantity >= item.stock && (
+                          {item.quantity >= item.product.stock && (
                             <span className="text-xs text-orange-500">Max stock</span>
                           )}
                         </div>
@@ -147,10 +148,10 @@ export const Cart = () => {
                         {/* Price */}
                         <div className="text-right">
                           <p className="text-2xl font-bold text-gradient">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            {(item.product.price * item.quantity).toFixed(2)} TND
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            ${item.price.toFixed(2)} each
+                            {item.product.price.toFixed(2)} TND each
                           </p>
                         </div>
                       </div>
@@ -188,13 +189,13 @@ export const Cart = () => {
             transition={{ duration: 0.5 }}
             className="lg:col-span-1"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 sticky top-8">
+            <div className="bg-white dark:bg-[#3a0f17] rounded-xl p-6 shadow-lg border border-gray-200 dark:border-[#2d2838] sticky top-8">
               <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Order Summary</h2>
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-gray-600 dark:text-gray-400">
                   <span>Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})</span>
-                  <span className="font-medium text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+                  <span className="font-medium text-[#510013] dark:text-white">{total.toFixed(2)} TND</span>
                 </div>
                 <div className="flex justify-between text-gray-600 dark:text-gray-400">
                   <span>Shipping</span>
@@ -202,27 +203,27 @@ export const Cart = () => {
                     {shippingCost === 0 ? (
                       <span className="text-green-600 dark:text-green-400">FREE</span>
                     ) : (
-                      `$${shippingCost.toFixed(2)}`
+                      `${shippingCost.toFixed(2)} TND`
                     )}
                   </span>
                 </div>
 
-                {total < 50 && (
+                {total < 150 && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800"
+                    className="p-3 bg-indigo-50 dark:bg-[#3a0f17]/20 rounded-lg border border-indigo-200 dark:border-[#2d2838]"
                   >
                     <p className="text-sm text-indigo-800 dark:text-indigo-300">
-                      Add ${(50 - total).toFixed(2)} more to get FREE shipping! 🚚
+                      Add {(150 - total).toFixed(2)} TND more to get FREE shipping! 🚚
                     </p>
                   </motion.div>
                 )}
 
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="pt-4 border-t border-gray-200 dark:border-[#2d2838]">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-gray-900 dark:text-white">Total</span>
-                    <span className="text-3xl font-bold text-gradient">${finalTotal.toFixed(2)}</span>
+                    <span className="text-3xl font-bold text-[#510013] dark:text-white">{finalTotal.toFixed(2)} TND</span>
                   </div>
                 </div>
               </div>
@@ -243,7 +244,7 @@ export const Cart = () => {
               </Link>
 
               {/* Trust Badges */}
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#2d2838]">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                     <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">

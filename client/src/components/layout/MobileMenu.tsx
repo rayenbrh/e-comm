@@ -41,14 +41,14 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-80 max-w-full bg-white dark:bg-gray-900 shadow-2xl z-50 md:hidden overflow-y-auto"
+            className="fixed top-0 right-0 bottom-0 w-80 max-w-full bg-white dark:bg-[#1E0007] shadow-2xl z-50 md:hidden overflow-y-auto"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#2d2838]">
               <h2 className="text-xl font-bold text-gradient">Menu</h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-burgundy-800 transition"
                 aria-label="Close menu"
               >
                 <X size={24} />

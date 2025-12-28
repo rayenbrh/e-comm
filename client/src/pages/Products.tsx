@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
 export const Products = () => {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -16,6 +18,14 @@ export const Products = () => {
   const [sortBy, setSortBy] = useState('');
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Read category from URL on mount
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category');
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [searchParams]);
 
   const { data, isLoading } = useProducts({
     search,
@@ -44,7 +54,7 @@ export const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#1E0007] py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -74,7 +84,7 @@ export const Products = () => {
                 </h2>
                 <button
                   onClick={resetFilters}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-sm text-yellow-600 dark:text-yellow-400 hover:underline"
                 >
                   Reset
                 </button>
@@ -115,7 +125,7 @@ export const Products = () => {
                       setSelectedCategory(e.target.value);
                       setPage(1);
                     }}
-                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 outline-none transition"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-burgundy-600 bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 dark:focus:ring-yellow-900 outline-none transition"
                   >
                     <option value="">All Categories</option>
                     {categories?.map((category) => (
@@ -158,7 +168,7 @@ export const Products = () => {
                       setSortBy(e.target.value);
                       setPage(1);
                     }}
-                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 outline-none transition"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-burgundy-600 bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 dark:focus:ring-yellow-900 outline-none transition"
                   >
                     <option value="">Default</option>
                     <option value="price-asc">Price: Low to High</option>
@@ -217,8 +227,8 @@ export const Products = () => {
                       onClick={() => setPage(i + 1)}
                       className={`px-4 py-2 rounded-lg font-medium transition ${
                         page === i + 1
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                          ? 'bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 text-white'
+                          : 'bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-burgundy-700'
                       }`}
                     >
                       {i + 1}

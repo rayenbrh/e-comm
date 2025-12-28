@@ -8,6 +8,7 @@ import { Footer } from './components/layout/Footer';
 // Pages
 import { Home } from './pages/Home';
 import { Products } from './pages/Products';
+import { Categories as CategoriesPage } from './pages/Categories';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ProductDetail } from './pages/ProductDetail';
@@ -24,15 +25,6 @@ import { AdminCategories } from './pages/admin/Categories';
 import { AdminUsers } from './pages/admin/Users';
 
 // Placeholder pages
-const CategoriesPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold mb-4">Categories</h1>
-      <p className="text-gray-600 dark:text-gray-400">Browse products by category</p>
-    </div>
-  </div>
-);
-
 const NotFoundPage = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
@@ -58,13 +50,13 @@ function App() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: isDark ? '#1f2937' : '#ffffff',
+            background: isDark ? '#1E0007' : '#ffffff',
             color: isDark ? '#ffffff' : '#000000',
           },
         }}
       />
 
-      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+      <div className="min-h-screen bg-white dark:bg-[#1E0007] text-gray-900 dark:text-white transition-colors duration-300">
         <Navbar />
 
         <main>

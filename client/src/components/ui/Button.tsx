@@ -28,9 +28,9 @@ export const Button = ({
   const baseStyles = 'font-medium rounded-lg transition-all duration-300 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/50',
-    secondary: 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600',
-    outline: 'border-2 border-blue-500 text-blue-500 dark:text-blue-400 hover:bg-blue-500 hover:text-white dark:hover:text-white',
+    primary: 'bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 text-white hover:shadow-lg hover:shadow-yellow-500/50',
+    secondary: 'bg-gray-200 dark:bg-burgundy-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-burgundy-600',
+    outline: 'border-2 border-yellow-500 text-yellow-500 dark:text-yellow-400 hover:bg-yellow-500 hover:text-white dark:hover:text-white',
     danger: 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:shadow-lg hover:shadow-red-500/50',
   };
 

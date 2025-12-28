@@ -35,10 +35,21 @@ export const useProduct = (id: string) => {
   return useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      const { data } = await api.get<{ success: boolean; product: Product }>(`/products/${id}`);
-      return data.product;
+      try {
+        const { data } = await api.get<{ success: boolean; product: Product }>(`/products/${id}`);
+        if (!data.success || !data.product) {
+          throw new Error('Product not found');
+        }
+        return data.product;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          throw new Error('Product not found');
+        }
+        throw error;
+      }
     },
     enabled: !!id,
+    retry: 1,
   });
 };
 
@@ -59,8 +70,12 @@ export const useCreateProduct = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (productData: Partial<Product>) => {
-      const { data } = await api.post('/products', productData);
+    mutationFn: async (formData: FormData | Partial<Product>) => {
+      const { data } = await api.post('/products', formData, {
+        headers: formData instanceof FormData ? {
+          'Content-Type': 'multipart/form-data',
+        } : {},
+      });
       return data;
     },
     onSuccess: () => {
@@ -77,8 +92,13 @@ export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Product> }) => {
-      const response = await api.put(`/products/${id}`, data);
+    mutationFn: async ({ id, data, formData }: { id: string; data?: Partial<Product>; formData?: FormData }) => {
+      const payload = formData || data;
+      const response = await api.put(`/products/${id}`, payload, {
+        headers: formData ? {
+          'Content-Type': 'multipart/form-data',
+        } : {},
+      });
       return response.data;
     },
     onSuccess: () => {

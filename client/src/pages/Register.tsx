@@ -52,7 +52,7 @@ export const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#1E0007] flex items-center justify-center py-12 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -64,7 +64,7 @@ export const Register = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center"
+            className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 rounded-full flex items-center justify-center"
           >
             <UserPlus size={40} className="text-white" />
           </motion.div>
@@ -138,7 +138,7 @@ export const Register = () => {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                className="text-burgundy-600 dark:text-burgundy-500 hover:underline font-medium"
               >
                 Sign in
               </Link>

@@ -23,13 +23,24 @@ import {
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: product, isLoading, error } = useProduct(id!);
-  const { data: relatedProducts } = useRelatedProducts(id!);
-  const addItem = useCartStore((state) => state.addItem);
+  const { data: product, isLoading, error, isError } = useProduct(id || '');
+  const { data: relatedProducts } = useRelatedProducts(id || '');
+  const addToCart = useCartStore((state) => state.addToCart);
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  if (!id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Invalid Product ID</h1>
+          <Button onClick={() => navigate('/products')}>Browse Products</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -39,11 +50,14 @@ export const ProductDetail = () => {
     );
   }
 
-  if (error || !product) {
+  if (isError || error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Product Not Found</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {error instanceof Error ? error.message : 'The product you are looking for does not exist.'}
+          </p>
           <Button onClick={() => navigate('/products')}>Browse Products</Button>
         </div>
       </div>
@@ -51,7 +65,7 @@ export const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    addToCart(product, quantity);
     toast.success(`Added ${quantity} ${product.name} to cart`);
   };
 
@@ -93,7 +107,7 @@ export const ProductDetail = () => {
             transition={{ duration: 0.5 }}
           >
             {/* Main Image */}
-            <div className="relative aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <div className="relative aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#3a0f17]">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={selectedImage}
@@ -112,13 +126,13 @@ export const ProductDetail = () => {
                 <>
                   <button
                     onClick={() => setSelectedImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-[#3a0f17]/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-burgundy-700 transition-colors"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
                     onClick={() => setSelectedImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-[#3a0f17]/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-burgundy-700 transition-colors"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -145,7 +159,7 @@ export const ProductDetail = () => {
                     className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === index
                         ? 'border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-800'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        : 'border-gray-200 dark:border-[#2d2838] hover:border-gray-300 dark:hover:border-burgundy-600'
                     }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -186,7 +200,34 @@ export const ProductDetail = () => {
 
             {/* Price */}
             <div className="mb-6">
-              <span className="text-5xl font-bold text-gradient">${product.price.toFixed(2)}</span>
+              {(() => {
+                const hasPromo = product.promoPrice && product.promoPrice > 0;
+                const displayPrice = hasPromo ? product.promoPrice : product.price;
+                const oldPrice = product.oldPrice || product.price;
+                const discountPercentage = hasPromo && oldPrice > 0 
+                  ? Math.round(((oldPrice - (product.promoPrice || 0)) / oldPrice) * 100)
+                  : 0;
+                
+                return (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-4">
+                      <span className="text-5xl font-bold text-[#510013] dark:text-white">
+                        {displayPrice.toFixed(2)} TND
+                      </span>
+                      {hasPromo && oldPrice > displayPrice && (
+                        <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
+                          {oldPrice.toFixed(2)} TND
+                        </span>
+                      )}
+                      {hasPromo && discountPercentage > 0 && (
+                        <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                          -{discountPercentage}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Description */}
@@ -212,7 +253,7 @@ export const ProductDetail = () => {
             <div className="mb-8">
               <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-white">Quantity</label>
               <div className="flex items-center gap-4">
-                <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
+                <div className="flex items-center border border-gray-300 dark:border-burgundy-600 rounded-lg">
                   <button
                     onClick={() => handleQuantityChange(-1)}
                     className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -251,7 +292,7 @@ export const ProductDetail = () => {
                 className={`px-6 rounded-lg border-2 transition-colors ${
                   isWishlisted
                     ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-500'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-red-500 hover:text-red-500'
+                    : 'border-gray-300 dark:border-burgundy-600 hover:border-red-500 hover:text-red-500'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -261,14 +302,14 @@ export const ProductDetail = () => {
             </div>
 
             {/* Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-6 bg-gray-50 dark:bg-[#3a0f17]/50 rounded-xl">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                <div className="p-2 bg-indigo-100 dark:bg-[#3a0f17]/30 rounded-lg">
                   <Truck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
                   <p className="font-medium text-sm">Free Shipping</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">On orders over $50</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">On orders over 150 TND</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -281,7 +322,7 @@ export const ProductDetail = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <div className="p-2 bg-purple-100 dark:bg-[#3a0f17]/30 rounded-lg">
                   <RefreshCw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>

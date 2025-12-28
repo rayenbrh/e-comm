@@ -29,6 +29,8 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  oldPrice?: number | null;
+  promoPrice?: number | null;
   category: Category;
   images: string[];
   stock: number;

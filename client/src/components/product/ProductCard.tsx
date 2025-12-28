@@ -20,6 +20,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   const imageUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
+  
+  // Calculate discount percentage
+  const hasPromo = product.promoPrice && product.promoPrice > 0;
+  const displayPrice = hasPromo ? product.promoPrice : product.price;
+  const oldPrice = product.oldPrice || product.price;
+  const discountPercentage = hasPromo && oldPrice > 0 
+    ? Math.round(((oldPrice - (product.promoPrice || 0)) / oldPrice) * 100)
+    : 0;
 
   return (
     <Link to={`/products/${product._id}`}>
@@ -30,7 +38,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         className="card overflow-hidden group cursor-pointer h-full flex flex-col"
       >
         {/* Image */}
-        <div className="relative overflow-hidden aspect-square bg-gray-100 dark:bg-gray-800">
+        <div className="relative overflow-hidden aspect-square bg-gray-100 dark:bg-[#3a0f17]">
           <motion.img
             src={imageUrl}
             alt={product.name}
@@ -39,9 +47,18 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             transition={{ duration: 0.4 }}
           />
 
+          {/* Discount Badge */}
+          {hasPromo && discountPercentage > 0 && (
+            <div className="absolute top-3 left-3 z-10">
+              <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                -{discountPercentage}%
+              </span>
+            </div>
+          )}
+
           {/* Featured Badge */}
           {product.featured && (
-            <div className="absolute top-3 left-3">
+            <div className={`absolute top-3 ${hasPromo && discountPercentage > 0 ? 'right-3' : 'left-3'}`}>
               <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                 Featured
               </span>
@@ -62,11 +79,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               whileHover={{ opacity: 1, y: 0 }}
-              className="absolute bottom-3 right-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute bottom-3 right-3 p-3 bg-white dark:bg-[#3a0f17] rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={handleAddToCart}
               aria-label="Add to cart"
             >
-              <ShoppingCart size={20} className="text-blue-600 dark:text-blue-400" />
+              <ShoppingCart size={20} className="text-burgundy-600 dark:text-burgundy-500" />
             </motion.button>
           )}
         </div>
@@ -79,7 +96,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           </p>
 
           {/* Title */}
-          <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+          <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white line-clamp-2 group-hover:text-burgundy-600 dark:group-hover:text-burgundy-500 transition">
             {product.name}
           </h3>
 
@@ -108,10 +125,17 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
           {/* Price and Stock */}
           <div className="flex items-center justify-between">
-            <div>
-              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                ${product.price.toFixed(2)}
-              </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-[#510013] dark:text-white">
+                  {displayPrice.toFixed(2)} TND
+                </span>
+                {hasPromo && oldPrice > displayPrice && (
+                  <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                    {oldPrice.toFixed(2)} TND
+                  </span>
+                )}
+              </div>
             </div>
             {product.stock > 0 && product.stock < 10 && (
               <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">

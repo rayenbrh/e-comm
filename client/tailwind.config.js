@@ -20,6 +20,18 @@ export default {
           800: '#075985',
           900: '#0c4a6e',
         },
+        burgundy: {
+          50: '#faf5f5',
+          100: '#f5ebeb',
+          200: '#e8d1d1',
+          300: '#d4a8a8',
+          400: '#b87a7a',
+          500: '#9d5a5a',
+          600: '#722F37',
+          700: '#5a252a',
+          800: '#4a1f24',
+          900: '#2d0f14',
+        },
       },
       animation: {
         'float': 'float 6s ease-in-out infinite',

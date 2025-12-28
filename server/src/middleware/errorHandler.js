@@ -1,3 +1,12 @@
+import multer from 'multer';
+
+/**
+ * Async handler wrapper to catch errors in async route handlers
+ */
+export const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 /**
  * Global error handling middleware
  */
@@ -43,6 +52,36 @@ export const errorHandler = (err, req, res, next) => {
     return res.status(401).json({
       success: false,
       message: 'Token expired',
+    });
+  }
+
+  // Multer errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      success: false,
+      message: 'File size too large',
+    });
+  }
+
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({
+      success: false,
+      message: 'Too many files uploaded. Maximum is 10 files',
+    });
+  }
+
+  if (err.message && err.message.includes('Only image files are allowed')) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  // Multer file filter errors
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
     });
   }
 

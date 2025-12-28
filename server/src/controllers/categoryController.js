@@ -1,5 +1,11 @@
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * @route   GET /api/categories
@@ -62,10 +68,19 @@ export const createCategory = async (req, res) => {
   try {
     const { name, description, image } = req.body;
 
+    // Handle uploaded image
+    let imagePath = '';
+    if (req.file) {
+      imagePath = `/uploads/${req.file.filename}`;
+    } else if (image) {
+      // Support both uploaded files and URL strings
+      imagePath = image;
+    }
+
     const category = await Category.create({
       name,
       description: description || '',
-      image: image || '',
+      image: imagePath,
     });
 
     res.status(201).json({
@@ -100,9 +115,26 @@ export const updateCategory = async (req, res) => {
       });
     }
 
+    // Handle uploaded image
+    if (req.file) {
+      // Delete old image if it exists and is in uploads folder
+      if (category.image && category.image.startsWith('/uploads/')) {
+        const oldFilePath = path.join(__dirname, '../../', category.image);
+        if (fs.existsSync(oldFilePath)) {
+          try {
+            fs.unlinkSync(oldFilePath);
+          } catch (error) {
+            console.error('Error deleting old category image:', error);
+          }
+        }
+      }
+      category.image = `/uploads/${req.file.filename}`;
+    } else if (image !== undefined) {
+      category.image = image;
+    }
+
     if (name) category.name = name;
     if (description !== undefined) category.description = description;
-    if (image !== undefined) category.image = image;
 
     await category.save();
 

@@ -27,7 +27,7 @@ export const Navbar = () => {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-sm"
+        className="sticky top-0 z-50 bg-white/80 dark:bg-[#1E0007]/80 backdrop-blur-lg border-b border-gray-200 dark:border-[#2d2838] shadow-sm"
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16 md:h-20">
@@ -36,12 +36,12 @@ export const Navbar = () => {
               <motion.div
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
-                className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
+                className="w-10 h-10 bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 rounded-lg flex items-center justify-center"
               >
                 <ShoppingCart className="text-white" size={24} />
               </motion.div>
               <span className="text-2xl font-bold text-gradient hidden sm:block">
-                ModernShop
+                gouidex
               </span>
             </Link>
 
@@ -56,8 +56,8 @@ export const Navbar = () => {
                   <span
                     className={`text-base font-medium transition-colors ${
                       isActive(link.path)
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400'
                     }`}
                   >
                     {link.label}
@@ -65,7 +65,7 @@ export const Navbar = () => {
                   {isActive(link.path) && (
                     <motion.div
                       layoutId="navbar-indicator"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-yellow-600 dark:bg-yellow-400"
                     />
                   )}
                 </Link>
@@ -79,7 +79,7 @@ export const Navbar = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-burgundy-800 transition"
                 aria-label="Toggle theme"
               >
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -113,7 +113,7 @@ export const Navbar = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#3a0f17] hover:bg-gray-200 dark:hover:bg-burgundy-700 transition"
                     >
                       <User size={18} />
                       <span className="text-sm font-medium">{user?.name}</span>
@@ -126,7 +126,7 @@ export const Navbar = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition"
                     >
                       Login
                     </motion.button>
@@ -135,7 +135,7 @@ export const Navbar = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition"
+                      className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 text-white rounded-lg hover:shadow-lg transition"
                     >
                       Sign Up
                     </motion.button>

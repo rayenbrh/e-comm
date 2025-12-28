@@ -5,7 +5,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { Layers, Plus, Edit, Trash2 } from 'lucide-react';
+import { Layers, Plus, Edit, Trash2, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -22,6 +22,8 @@ export const AdminCategories = () => {
     description: '',
     image: '',
   });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,6 +37,8 @@ export const AdminCategories = () => {
         description: category.description || '',
         image: category.image || '',
       });
+      setImagePreview(category.image || '');
+      setSelectedImage(null);
     } else {
       setEditingCategory(null);
       setFormData({
@@ -42,6 +46,8 @@ export const AdminCategories = () => {
         description: '',
         image: '',
       });
+      setImagePreview('');
+      setSelectedImage(null);
     }
     setIsModalOpen(true);
   };
@@ -54,17 +60,67 @@ export const AdminCategories = () => {
       description: '',
       image: '',
     });
+    setImagePreview('');
+    setSelectedImage(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (editingCategory && editingCategory.image) {
+      setImagePreview(editingCategory.image);
+    } else {
+      setImagePreview('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('description', formData.description);
+      
+      // Add image if uploaded, otherwise keep existing image
+      if (selectedImage) {
+        formDataToSend.append('categoryImage', selectedImage);
+      } else if (formData.image && !editingCategory) {
+        // Only send image URL if creating new category and no file uploaded
+        formDataToSend.append('image', formData.image);
+      } else if (editingCategory && editingCategory.image && !selectedImage) {
+        // Keep existing image when editing
+        formDataToSend.append('image', editingCategory.image);
+      }
+
       if (editingCategory) {
-        await api.put(`/categories/${editingCategory._id}`, formData);
+        await api.put(`/categories/${editingCategory._id}`, formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
         toast.success('Category updated successfully');
       } else {
-        await api.post('/categories', formData);
+        await api.post('/categories', formDataToSend, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
         toast.success('Category created successfully');
       }
       queryClient.invalidateQueries({ queryKey: ['categories'] });
@@ -118,7 +174,7 @@ export const AdminCategories = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl"
+            className="text-center py-16 bg-white dark:bg-[#3a0f17] rounded-xl"
           >
             <Layers className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">No categories yet</h2>
@@ -136,9 +192,9 @@ export const AdminCategories = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden group hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-[#3a0f17] rounded-xl shadow-sm border border-gray-200 dark:border-[#2d2838] overflow-hidden group hover:shadow-lg transition-shadow"
               >
-                <div className="aspect-video bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                <div className="aspect-video bg-gray-100 dark:bg-burgundy-700 overflow-hidden">
                   <img
                     src={category.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
                     alt={category.name}
@@ -198,16 +254,54 @@ export const AdminCategories = () => {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
-            <Input
-              label="Image URL"
-              name="image"
-              value={formData.image}
-              onChange={handleInputChange}
-              placeholder="https://example.com/image.jpg"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Category Image
+              </label>
+              <div className="flex items-center gap-4 mb-2">
+                <label
+                  htmlFor="category-image-input"
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                >
+                  <Upload className="w-5 h-5" />
+                  <span>Choose Image</span>
+                </label>
+                <input
+                  id="category-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                {selectedImage && (
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedImage.name}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Select an image file (JPEG, PNG, GIF, or WebP).
+              </p>
+              {imagePreview && (
+                <div className="relative group">
+                  <img
+                    src={imagePreview}
+                    alt="Category preview"
+                    className="w-full h-48 object-cover rounded-lg border-2 border-gray-300 dark:border-burgundy-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex gap-4 pt-4">
               <Button type="submit" className="flex-1">
                 {editingCategory ? 'Update Category' : 'Create Category'}

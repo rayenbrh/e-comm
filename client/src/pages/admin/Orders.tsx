@@ -68,7 +68,7 @@ export const AdminOrders = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl"
+            className="text-center py-16 bg-white dark:bg-[#3a0f17] rounded-xl"
           >
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">No orders yet</h2>
@@ -82,7 +82,7 @@ export const AdminOrders = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-[#3a0f17] rounded-xl shadow-sm border border-gray-200 dark:border-[#2d2838]"
               >
                 <div className="p-6">
                   {/* Order Header */}
@@ -101,7 +101,7 @@ export const AdminOrders = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
-                          ${order.total?.toFixed(2)}
+                          {order.total?.toFixed(2)} TND
                         </div>
                       </div>
                     </div>
@@ -112,7 +112,7 @@ export const AdminOrders = () => {
                           <select
                             value={newStatus || order.status}
                             onChange={(e) => setNewStatus(e.target.value)}
-                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                            className="px-3 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
                           >
                             {statuses.map((status) => (
                               <option key={status} value={status}>
@@ -157,7 +157,7 @@ export const AdminOrders = () => {
                   <div className="space-y-3 mb-6">
                     <h4 className="font-semibold text-gray-900 dark:text-white">Items:</h4>
                     {order.items?.map((item: any, itemIndex: number) => (
-                      <div key={itemIndex} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <div key={itemIndex} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-burgundy-700/50 rounded-lg">
                         <img
                           src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
                           alt={item.name}
@@ -166,18 +166,18 @@ export const AdminOrders = () => {
                         <div className="flex-1">
                           <p className="font-medium text-gray-900 dark:text-white">{item.name}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Qty: {item.quantity} × ${item.price?.toFixed(2)}
+                            Qty: {item.quantity} × {item.price?.toFixed(2)} TND
                           </p>
                         </div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          ${(item.quantity * item.price)?.toFixed(2)}
+                          {(item.quantity * item.price)?.toFixed(2)} TND
                         </p>
                       </div>
                     ))}
                   </div>
 
                   {/* Customer & Shipping Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200 dark:border-[#2d2838]">
                     <div>
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Customer Information</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{order.shippingAddress?.name}</p>
@@ -195,20 +195,20 @@ export const AdminOrders = () => {
                   </div>
 
                   {/* Order Summary */}
-                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#2d2838]">
                     <div className="flex justify-end">
                       <div className="w-full md:w-1/2 space-y-2">
                         <div className="flex justify-between text-gray-600 dark:text-gray-400">
                           <span>Subtotal:</span>
-                          <span>${order.subtotal?.toFixed(2)}</span>
+                          <span>{order.subtotal?.toFixed(2)} TND</span>
                         </div>
                         <div className="flex justify-between text-gray-600 dark:text-gray-400">
                           <span>Shipping:</span>
-                          <span>{order.shippingCost === 0 ? 'FREE' : `$${order.shippingCost?.toFixed(2)}`}</span>
+                          <span>{order.shippingCost === 0 ? 'FREE' : `${order.shippingCost?.toFixed(2)} TND`}</span>
                         </div>
-                        <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-[#2d2838]">
                           <span>Total:</span>
-                          <span className="text-gradient">${order.total?.toFixed(2)}</span>
+                          <span className="text-[#510013] dark:text-white">{order.total?.toFixed(2)} TND</span>
                         </div>
                       </div>
                     </div>

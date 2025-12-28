@@ -423,12 +423,14 @@ const seedDatabase = async () => {
     });
 
     console.log('📂 Creating categories...');
-    const createdCategories = await Category.insertMany(categories);
+    const createdCategories = await Promise.all(
+      categories.map(category => Category.create(category))
+    );
 
     console.log('📦 Creating products...');
     const productsWithCategories = products.map((product, index) => ({
       ...product,
-      category: createdCategories[Math.floor(index / 3)]._id,
+      category: createdCategories[index % createdCategories.length]._id,
     }));
     const createdProducts = await Product.insertMany(productsWithCategories);
 

@@ -62,7 +62,7 @@ export const OrderHistory = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-16"
           >
-            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-gray-100 dark:bg-gray-800 rounded-full">
+            <div className="inline-flex items-center justify-center w-24 h-24 mb-6 bg-gray-100 dark:bg-[#3a0f17] rounded-full">
               <Package className="w-12 h-12 text-gray-400" />
             </div>
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">No orders yet</h2>
@@ -83,10 +83,10 @@ export const OrderHistory = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-[#3a0f17] rounded-xl shadow-sm border border-gray-200 dark:border-[#2d2838] overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Order Header */}
-                <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                <div className="p-6 bg-gray-50 dark:bg-[#3a0f17]/50 border-b border-gray-200 dark:border-[#2d2838]">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Order Number</p>
@@ -105,7 +105,7 @@ export const OrderHistory = () => {
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total</p>
                       <div className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4 text-gray-400" />
-                        <p className="font-semibold text-gray-900 dark:text-white">${order.total?.toFixed(2)}</p>
+                        <p className="font-semibold text-[#510013] dark:text-white">${order.total?.toFixed(2)}</p>
                       </div>
                     </div>
                     <div>
@@ -129,7 +129,7 @@ export const OrderHistory = () => {
                         <img
                           src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
                           alt={item.name}
-                          className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-gray-700"
+                          className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-burgundy-700"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 dark:text-white truncate">{item.name}</p>
@@ -138,7 +138,7 @@ export const OrderHistory = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-gray-900 dark:text-white">
+                          <p className="font-semibold text-[#510013] dark:text-white">
                             ${(item.quantity * item.price)?.toFixed(2)}
                           </p>
                         </div>
@@ -148,7 +148,7 @@ export const OrderHistory = () => {
 
                   {/* Shipping Address */}
                   {order.shippingAddress && (
-                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#2d2838]">
                       <div className="flex items-start gap-2">
                         <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                         <div>
@@ -168,21 +168,21 @@ export const OrderHistory = () => {
                   )}
 
                   {/* Order Summary */}
-                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#2d2838]">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                        <span className="text-gray-900 dark:text-white">${order.subtotal?.toFixed(2)}</span>
+                        <span className="text-[#510013] dark:text-white">${order.subtotal?.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Shipping</span>
-                        <span className="text-gray-900 dark:text-white">
+                        <span className="text-[#510013] dark:text-white">
                           {order.shippingCost === 0 ? 'FREE' : `$${order.shippingCost?.toFixed(2)}`}
                         </span>
                       </div>
-                      <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200 dark:border-[#2d2838]">
                         <span className="text-gray-900 dark:text-white">Total</span>
-                        <span className="text-gradient text-lg">${order.total?.toFixed(2)}</span>
+                        <span className="text-[#510013] dark:text-white text-lg">${order.total?.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
