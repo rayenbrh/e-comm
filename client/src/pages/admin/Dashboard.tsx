@@ -8,18 +8,16 @@ import { useHeroImage, useUploadHeroImages, useDeleteHeroImage } from '@/hooks/u
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import {
-  ShoppingBag,
   Package,
   Users,
   DollarSign,
-  TrendingUp,
   ShoppingCart,
   Layers,
   ArrowRight,
   Image as ImageIcon,
   Upload,
   Trash2,
-  X,
+  Gift,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -79,23 +77,24 @@ export const AdminDashboard = () => {
   };
 
   // Handle upload
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (selectedFiles.length === 0) {
       toast.error('Please select at least one image file');
       return;
     }
     
-    uploadHeroImages.mutate(selectedFiles, {
-      onSuccess: () => {
-        setSelectedFiles([]);
-        setPreviews(heroImages || []);
-        // Reset file input
-        const fileInput = document.getElementById('hero-images-input') as HTMLInputElement;
-        if (fileInput) {
-          fileInput.value = '';
-        }
-      },
-    });
+    try {
+      await uploadHeroImages.mutateAsync(selectedFiles);
+      setSelectedFiles([]);
+      // Reset file input
+      const fileInput = document.getElementById('hero-images-input') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      // Previews will be updated automatically when heroImages query refetches
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
   };
 
   // Handle delete image
@@ -150,7 +149,6 @@ export const AdminDashboard = () => {
       color: 'bg-green-500',
       textColor: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-100 dark:bg-green-900/30',
-      change: '+12.5%',
     },
     {
       label: 'Total Orders',
@@ -159,7 +157,6 @@ export const AdminDashboard = () => {
       color: 'bg-burgundy-500',
       textColor: 'text-burgundy-600 dark:text-burgundy-400',
       bgColor: 'bg-burgundy-100 dark:bg-[#3a0f17]/30',
-      change: '+8.2%',
     },
     {
       label: 'Products',
@@ -168,7 +165,6 @@ export const AdminDashboard = () => {
       color: 'bg-burgundy-500',
       textColor: 'text-burgundy-600 dark:text-burgundy-400',
       bgColor: 'bg-burgundy-100 dark:bg-[#3a0f17]/30',
-      change: '+3',
     },
     {
       label: 'Categories',
@@ -177,7 +173,6 @@ export const AdminDashboard = () => {
       color: 'bg-orange-500',
       textColor: 'text-orange-600 dark:text-orange-400',
       bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-      change: '+1',
     },
   ];
 
@@ -207,10 +202,6 @@ export const AdminDashboard = () => {
                 <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <stat.icon className={`w-6 h-6 ${stat.textColor}`} />
                 </div>
-                <span className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4" />
-                  {stat.change}
-                </span>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
@@ -336,7 +327,7 @@ export const AdminDashboard = () => {
           className="mt-8"
         >
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link
               to="/admin/products"
               className="p-6 bg-white dark:bg-[#3a0f17] rounded-xl shadow-sm border border-gray-200 dark:border-[#2d2838] hover:border-yellow-500 dark:hover:border-yellow-500 transition-colors group"
@@ -360,6 +351,14 @@ export const AdminDashboard = () => {
               <Layers className="w-8 h-8 text-yellow-600 dark:text-yellow-400 mb-3 group-hover:scale-110 transition-transform" />
               <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Categories</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Organize product categories</p>
+            </Link>
+            <Link
+              to="/admin/packs"
+              className="p-6 bg-white dark:bg-[#3a0f17] rounded-xl shadow-sm border border-gray-200 dark:border-[#2d2838] hover:border-yellow-500 dark:hover:border-yellow-500 transition-colors group"
+            >
+              <Gift className="w-8 h-8 text-yellow-600 dark:text-yellow-400 mb-3 group-hover:scale-110 transition-transform" />
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Manage Packs</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Create and manage special offers</p>
             </Link>
             <Link
               to="/admin/users"

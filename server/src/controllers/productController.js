@@ -28,9 +28,22 @@ export const getProducts = async (req, res) => {
       query.$text = { $search: search };
     }
 
-    // Category filter
+    // Category filter - include subcategories if filtering by main category
     if (category) {
-      query.category = category;
+      const categoryDoc = await Category.findById(category);
+      if (categoryDoc) {
+        // If it's a main category, get all its subcategories
+        if (!categoryDoc.parent) {
+          const subcategories = await Category.find({ parent: categoryDoc._id }).select('_id');
+          const categoryIds = [categoryDoc._id, ...subcategories.map(sub => sub._id)];
+          query.category = { $in: categoryIds };
+        } else {
+          // If it's a subcategory, filter by that specific category
+          query.category = category;
+        }
+      } else {
+        query.category = category;
+      }
     }
 
     // Price filter

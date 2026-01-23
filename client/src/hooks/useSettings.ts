@@ -86,6 +86,7 @@ export const useUploadHeroImages = () => {
       toast.success(`${variables.length} hero image(s) uploaded successfully`);
     },
     onError: (error: Error) => {
+      console.error('Upload error:', error);
       toast.error(error.message || 'Failed to upload hero images');
     },
   });

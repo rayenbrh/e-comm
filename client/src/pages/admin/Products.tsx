@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 export const AdminProducts = () => {
   const { data: productsData, isLoading } = useProducts();
-  const { data: categories } = useCategories();
+  const { data: categories } = useCategories(true); // Get categories with subcategories
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
@@ -398,10 +398,15 @@ export const AdminProducts = () => {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="">Select a category</option>
-                {categories?.map((cat: any) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
+                {categories?.map((category: any) => (
+                  <optgroup key={category._id} label={category.name}>
+                    <option value={category._id}>{category.name}</option>
+                    {category.subcategories?.map((sub: any) => (
+                      <option key={sub._id} value={sub._id}>
+                        &nbsp;&nbsp;└─ {sub.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

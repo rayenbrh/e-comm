@@ -1,18 +1,25 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, TrendingUp, Shield, Zap } from 'lucide-react';
+import { ArrowRight, ShoppingCart, Package } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useHeroImage } from '@/hooks/useSettings';
+import { usePacks } from '@/hooks/usePacks';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useCartStore } from '@/stores/cartStore';
+import toast from 'react-hot-toast';
 
 export const Home = () => {
   const { data: featuredData, isLoading: loadingFeatured } = useProducts({ featured: true, limit: 8 });
-  const { data: categories, isLoading: loadingCategories } = useCategories();
+  const { data: categories, isLoading: loadingCategories } = useCategories(true); // Get categories with subcategories
   const { data: heroImages = [], isLoading: loadingHeroImage } = useHeroImage();
+  const { data: packs = [], isLoading: loadingPacks } = usePacks();
+  const { addPackToCart } = useCartStore();
+  const { t } = useTranslation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Auto-rotate through hero images
@@ -25,29 +32,6 @@ export const Home = () => {
 
     return () => clearInterval(interval);
   }, [heroImages.length]);
-
-  const features = [
-    {
-      icon: ShoppingBag,
-      title: 'Large Choix',
-      description: 'Des milliers de produits tunisiens et internationaux dans toutes les catégories',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Meilleurs Prix',
-      description: 'Prix compétitifs avec des réductions régulières et des offres spéciales',
-    },
-    {
-      icon: Shield,
-      title: 'Achat Sécurisé',
-      description: 'Vos données sont protégées avec une sécurité de niveau industrie',
-    },
-    {
-      icon: Zap,
-      title: 'Livraison Rapide',
-      description: 'Livraison express partout en Tunisie, directement à votre porte',
-    },
-  ];
 
   return (
     <div className="min-h-screen">
@@ -67,8 +51,8 @@ export const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                Shop the
-                <span className="text-gradient block mt-2">Future Today</span>
+                {t('home.heroTitle')}
+                <span className="text-gradient block mt-2">{t('home.heroTitleHighlight')}</span>
               </motion.h1>
 
               <motion.p
@@ -77,7 +61,7 @@ export const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                Discover amazing products with modern shopping experience. Quality, variety, and affordability all in one place.
+                {t('home.heroDescription')}
               </motion.p>
 
               <motion.div
@@ -88,12 +72,12 @@ export const Home = () => {
               >
                 <Link to="/products">
                   <Button size="lg">
-                    Shop Now <ArrowRight size={20} />
+                    {t('home.shopNow')} <ArrowRight size={20} />
                   </Button>
                 </Link>
                 <Link to="/products?featured=true">
                   <Button variant="outline" size="lg">
-                    View Featured
+                    {t('home.viewFeatured')}
                   </Button>
                 </Link>
               </motion.div>
@@ -107,15 +91,15 @@ export const Home = () => {
               >
                 <div>
                   <h3 className="text-3xl font-bold text-gradient">1000+</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">Products</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{t('home.stats.products')}</p>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-gradient">50k+</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">Customers</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{t('home.stats.customers')}</p>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-gradient">99%</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">Satisfaction</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">{t('home.stats.satisfaction')}</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -303,7 +287,7 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Packs Section */}
       <section className="py-20 bg-white dark:bg-[#1E0007]">
         <div className="container mx-auto px-4">
           <motion.div
@@ -313,37 +297,90 @@ export const Home = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Pourquoi choisir Gouidex ?
+              {t('home.specialOffers')}
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Votre destination de shopping en Tunisie
+              {t('home.exclusivePacks')}
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="text-center p-6 rounded-xl bg-white/5 dark:bg-[#3a0f17]/50 backdrop-blur-sm border border-white/10 dark:border-[#2d2838]/50"
-                >
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-yellow-500 via-yellow-600 to-amber-600 rounded-2xl flex items-center justify-center">
-                    <Icon size={32} className="text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {feature.description}
-                  </p>
-                </motion.div>
-              );
-            })}
-          </div>
+
+          {loadingPacks ? (
+            <Loader />
+          ) : packs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {packs.map((pack, index) => (
+                <Link key={pack._id} to={`/packs/${pack._id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ y: -8 }}
+                    className="bg-white dark:bg-[#3a0f17] rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-[#2d2838] group"
+                  >
+                    {pack.image && (
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={pack.image}
+                          alt={pack.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        {pack.featured && (
+                          <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            {t('home.featured')}
+                          </div>
+                        )}
+                        <div className="absolute top-4 right-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                          -{pack.discountPercentage}%
+                        </div>
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+                        {pack.name}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                        {pack.description}
+                      </p>
+                      
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          {pack.products.length} {pack.products.length === 1 ? t('home.product') : t('home.products')}
+                        </p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl font-bold text-[#510013] dark:text-white">
+                            {pack.discountPrice.toFixed(2)} TND
+                          </span>
+                          <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                            {pack.originalPrice.toFixed(2)} TND
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          addPackToCart(pack);
+                          toast.success(t('home.packAddedToCart'));
+                        }}
+                        className="w-full"
+                        size="lg"
+                      >
+                        <ShoppingCart className="w-5 h-5 mr-2" />
+                        {t('home.addPackToCart')}
+                      </Button>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">{t('home.noPacksAvailable')}</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -357,10 +394,10 @@ export const Home = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Shop by Category
+              {t('home.shopByCategory')}
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Find exactly what you're looking for
+              {t('home.findExactly')}
             </p>
           </motion.div>
 
@@ -368,7 +405,7 @@ export const Home = () => {
             <Loader />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {categories?.slice(0, 5).map((category, index) => (
+              {categories?.filter((cat: any) => !cat.parent && !cat.isSubCategory).slice(0, 5).map((category: any, index: number) => (
                 <Link key={category._id} to={`/products?category=${category._id}`}>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -388,6 +425,11 @@ export const Home = () => {
                     <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
                       {category.name}
                     </h3>
+                    {category.subcategories && category.subcategories.length > 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {category.subcategories.length} {category.subcategories.length === 1 ? t('categories.subcategory') : t('categories.subcategories')}
+                      </p>
+                    )}
                   </motion.div>
                 </Link>
               ))}
@@ -406,10 +448,10 @@ export const Home = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Featured Products
+              {t('home.featuredProducts')}
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              Check out our handpicked selection
+              {t('home.handpickedSelection')}
             </p>
           </motion.div>
 
@@ -427,7 +469,7 @@ export const Home = () => {
               >
                 <Link to="/products">
                   <Button size="lg">
-                    View All Products <ArrowRight size={20} />
+                    {t('home.viewAllProducts')} <ArrowRight size={20} />
                   </Button>
                 </Link>
               </motion.div>

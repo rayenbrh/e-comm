@@ -11,54 +11,79 @@ import api from '@/lib/axios';
 import { useQueryClient } from '@tanstack/react-query';
 
 export const AdminCategories = () => {
-  const { data: categories, isLoading } = useCategories();
+  const { data: categories, isLoading } = useCategories(true); // Get categories with subcategories
   const queryClient = useQueryClient();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [isSubCategoryModalOpen, setIsSubCategoryModalOpen] = useState(false);
+  const [selectedParentCategory, setSelectedParentCategory] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     image: '',
+    parent: '',
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+
+  // Get main categories (no parent) for parent selection
+  const mainCategories = categories?.filter((cat: any) => !cat.parent && !cat.isSubCategory) || [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleOpenModal = (category?: any) => {
-    if (category) {
-      setEditingCategory(category);
-      setFormData({
-        name: category.name,
-        description: category.description || '',
-        image: category.image || '',
-      });
-      setImagePreview(category.image || '');
-      setSelectedImage(null);
-    } else {
+  const handleOpenModal = (category?: any, isSubCategory?: boolean, parentCategory?: any) => {
+    if (isSubCategory && parentCategory) {
+      setSelectedParentCategory(parentCategory);
       setEditingCategory(null);
       setFormData({
         name: '',
         description: '',
         image: '',
+        parent: parentCategory._id,
       });
       setImagePreview('');
       setSelectedImage(null);
+      setIsSubCategoryModalOpen(true);
+    } else if (category) {
+      setEditingCategory(category);
+      setFormData({
+        name: category.name,
+        description: category.description || '',
+        image: category.image || '',
+        parent: category.parent || '',
+      });
+      setImagePreview(category.image || '');
+      setSelectedImage(null);
+      setIsModalOpen(true);
+    } else {
+      setEditingCategory(null);
+      setSelectedParentCategory(null);
+      setFormData({
+        name: '',
+        description: '',
+        image: '',
+        parent: '',
+      });
+      setImagePreview('');
+      setSelectedImage(null);
+      setIsModalOpen(true);
     }
-    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setIsSubCategoryModalOpen(false);
     setEditingCategory(null);
+    setSelectedParentCategory(null);
     setFormData({
       name: '',
       description: '',
       image: '',
+      parent: '',
     });
     setImagePreview('');
     setSelectedImage(null);
@@ -97,6 +122,11 @@ export const AdminCategories = () => {
       formDataToSend.append('name', formData.name);
       formDataToSend.append('description', formData.description);
       
+      // Add parent if selected
+      if (formData.parent) {
+        formDataToSend.append('parent', formData.parent);
+      }
+      
       // Add image if uploaded, otherwise keep existing image
       if (selectedImage) {
         formDataToSend.append('categoryImage', selectedImage);
@@ -114,14 +144,14 @@ export const AdminCategories = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-        toast.success('Category updated successfully');
+        toast.success(formData.parent ? 'Subcategory updated successfully' : 'Category updated successfully');
       } else {
         await api.post('/categories', formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
-        toast.success('Category created successfully');
+        toast.success(formData.parent ? 'Subcategory created successfully' : 'Category created successfully');
       }
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       handleCloseModal();
@@ -233,11 +263,47 @@ export const AdminCategories = () => {
 
         {/* Add/Edit Category Modal */}
         <Modal
-          isOpen={isModalOpen}
+          isOpen={isModalOpen || isSubCategoryModalOpen}
           onClose={handleCloseModal}
-          title={editingCategory ? 'Edit Category' : 'Add Category'}
+          title={
+            isSubCategoryModalOpen
+              ? `Add Subcategory to ${selectedParentCategory?.name || ''}`
+              : editingCategory
+              ? 'Edit Category'
+              : 'Add Category'
+          }
         >
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Parent Category Selector (only for new categories, not subcategories) */}
+            {!isSubCategoryModalOpen && !editingCategory && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Parent Category (Optional - leave empty for main category)
+                </label>
+                <select
+                  name="parent"
+                  value={formData.parent}
+                  onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="">None (Main Category)</option>
+                  {mainCategories.map((cat: any) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {isSubCategoryModalOpen && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  Creating subcategory under: <strong>{selectedParentCategory?.name}</strong>
+                </p>
+              </div>
+            )}
+
             <Input
               label="Category Name"
               name="name"
@@ -304,7 +370,7 @@ export const AdminCategories = () => {
             </div>
             <div className="flex gap-4 pt-4">
               <Button type="submit" className="flex-1">
-                {editingCategory ? 'Update Category' : 'Create Category'}
+                {editingCategory ? 'Update Category' : isSubCategoryModalOpen ? 'Create Subcategory' : 'Create Category'}
               </Button>
               <Button type="button" variant="outline" onClick={handleCloseModal} className="flex-1">
                 Cancel

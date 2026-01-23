@@ -8,9 +8,13 @@ const api = axios.create({
   },
 });
 
-// Request interceptor
+// Request interceptor - Remove Content-Type header for FormData
 api.interceptors.request.use(
   (config) => {
+    // If data is FormData, remove Content-Type header to let browser set it with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => {

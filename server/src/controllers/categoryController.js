@@ -9,18 +9,43 @@ const __dirname = path.dirname(__filename);
 
 /**
  * @route   GET /api/categories
- * @desc    Get all categories
+ * @desc    Get all categories with subcategories
  * @access  Public
  */
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({}).sort({ name: 1 });
-
-    res.json({
-      success: true,
-      count: categories.length,
-      categories,
-    });
+    const { includeSubcategories } = req.query;
+    
+    // Get main categories (no parent)
+    const mainCategories = await Category.find({ parent: null }).sort({ name: 1 });
+    
+    if (includeSubcategories === 'true') {
+      // Populate subcategories for each main category
+      const categoriesWithSubs = await Promise.all(
+        mainCategories.map(async (category) => {
+          const subcategories = await Category.find({ parent: category._id }).sort({ name: 1 });
+          return {
+            ...category.toObject(),
+            subcategories,
+          };
+        })
+      );
+      
+      res.json({
+        success: true,
+        count: mainCategories.length,
+        categories: categoriesWithSubs,
+      });
+    } else {
+      // Get all categories (main + subcategories) flat
+      const allCategories = await Category.find({}).sort({ name: 1 });
+      
+      res.json({
+        success: true,
+        count: allCategories.length,
+        categories: allCategories,
+      });
+    }
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({
@@ -61,12 +86,12 @@ export const getCategoryById = async (req, res) => {
 
 /**
  * @route   POST /api/categories
- * @desc    Create a new category
+ * @desc    Create a new category or subcategory
  * @access  Private/Admin
  */
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, image } = req.body;
+    const { name, description, image, parent } = req.body;
 
     // Handle uploaded image
     let imagePath = '';
@@ -77,15 +102,29 @@ export const createCategory = async (req, res) => {
       imagePath = image;
     }
 
+    // Validate parent if provided
+    let parentCategory = null;
+    if (parent) {
+      parentCategory = await Category.findById(parent);
+      if (!parentCategory) {
+        return res.status(400).json({
+          success: false,
+          message: 'Parent category not found',
+        });
+      }
+    }
+
     const category = await Category.create({
       name,
       description: description || '',
       image: imagePath,
+      parent: parent || null,
+      isSubCategory: !!parent,
     });
 
     res.status(201).json({
       success: true,
-      message: 'Category created successfully',
+      message: parent ? 'Subcategory created successfully' : 'Category created successfully',
       category,
     });
   } catch (error) {
@@ -99,12 +138,12 @@ export const createCategory = async (req, res) => {
 
 /**
  * @route   PUT /api/categories/:id
- * @desc    Update a category
+ * @desc    Update a category or subcategory
  * @access  Private/Admin
  */
 export const updateCategory = async (req, res) => {
   try {
-    const { name, description, image } = req.body;
+    const { name, description, image, parent } = req.body;
 
     const category = await Category.findById(req.params.id);
 
@@ -113,6 +152,32 @@ export const updateCategory = async (req, res) => {
         success: false,
         message: 'Category not found',
       });
+    }
+
+    // Validate parent if provided and different
+    if (parent && parent !== category.parent?.toString()) {
+      // Check if trying to set itself as parent
+      if (parent === category._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Category cannot be its own parent',
+        });
+      }
+      
+      const parentCategory = await Category.findById(parent);
+      if (!parentCategory) {
+        return res.status(400).json({
+          success: false,
+          message: 'Parent category not found',
+        });
+      }
+      
+      category.parent = parent;
+      category.isSubCategory = true;
+    } else if (parent === null || parent === '') {
+      // Removing parent (making it a main category)
+      category.parent = null;
+      category.isSubCategory = false;
     }
 
     // Handle uploaded image
@@ -154,7 +219,7 @@ export const updateCategory = async (req, res) => {
 
 /**
  * @route   DELETE /api/categories/:id
- * @desc    Delete a category
+ * @desc    Delete a category or subcategory
  * @access  Private/Admin
  */
 export const deleteCategory = async (req, res) => {
@@ -165,6 +230,15 @@ export const deleteCategory = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Category not found',
+      });
+    }
+
+    // Check if category has subcategories
+    const subcategoriesCount = await Category.countDocuments({ parent: category._id });
+    if (subcategoriesCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete category. ${subcategoriesCount} subcategory(ies) exist. Please delete subcategories first.`,
       });
     }
 

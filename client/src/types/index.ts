@@ -20,6 +20,9 @@ export interface Category {
   slug: string;
   description: string;
   image?: string;
+  parent?: string | null;
+  isSubCategory?: boolean;
+  subcategories?: Category[];
   createdAt: string;
   updatedAt: string;
 }
@@ -44,8 +47,26 @@ export interface Product {
 }
 
 export interface CartItem {
-  product: Product;
+  product?: Product;
+  pack?: {
+    _id: string;
+    name: string;
+    description: string;
+    image?: string;
+    discountPrice: number;
+    originalPrice: number;
+    discountPercentage: number;
+    products: Array<{
+      product: Product;
+      quantity: number;
+    }>;
+  };
   quantity: number;
+  type: 'product' | 'pack';
+}
+
+export interface WishlistItem {
+  product: Product;
 }
 
 export interface OrderItem {

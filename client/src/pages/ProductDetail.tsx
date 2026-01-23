@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProduct, useRelatedProducts } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/Button';
 import { Loader } from '@/components/ui/Loader';
 import { Badge } from '@/components/ui/Badge';
@@ -26,17 +28,20 @@ export const ProductDetail = () => {
   const { data: product, isLoading, error, isError } = useProduct(id || '');
   const { data: relatedProducts } = useRelatedProducts(id || '');
   const addToCart = useCartStore((state) => state.addToCart);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
+  const { t, tWithParams } = useTranslation();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const inWishlist = product ? isInWishlist(product._id) : false;
 
   if (!id) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Invalid Product ID</h1>
-          <Button onClick={() => navigate('/products')}>Browse Products</Button>
+          <h1 className="text-4xl font-bold mb-4">{t('productDetail.invalidId')}</h1>
+          <Button onClick={() => navigate('/products')}>{t('productDetail.browseProducts')}</Button>
         </div>
       </div>
     );
@@ -54,19 +59,33 @@ export const ProductDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Product Not Found</h1>
+          <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{t('productDetail.productNotFound')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {error instanceof Error ? error.message : 'The product you are looking for does not exist.'}
+            {error instanceof Error ? error.message : t('productDetail.notExist')}
           </p>
-          <Button onClick={() => navigate('/products')}>Browse Products</Button>
+          <Button onClick={() => navigate('/products')}>{t('productDetail.browseProducts')}</Button>
         </div>
       </div>
     );
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    toast.success(`Added ${quantity} ${product.name} to cart`);
+    if (product) {
+      addToCart(product, quantity);
+      toast.success(tWithParams('productDetail.addedToCart', { quantity: quantity.toString(), name: product.name }));
+    }
+  };
+
+  const handleWishlistToggle = () => {
+    if (product) {
+      if (inWishlist) {
+        removeFromWishlist(product._id);
+        toast.success(t('wishlist.removed'));
+      } else {
+        addToWishlist(product);
+        toast.success(t('wishlist.added'));
+      }
+    }
   };
 
   const handleQuantityChange = (delta: number) => {
@@ -88,11 +107,11 @@ export const ProductDetail = () => {
           className="flex items-center space-x-2 text-sm mb-8"
         >
           <Link to="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
-            Home
+            {t('nav.home')}
           </Link>
           <span className="text-gray-400">/</span>
           <Link to="/products" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
-            Products
+            {t('nav.products')}
           </Link>
           <span className="text-gray-400">/</span>
           <span className="text-gray-900 dark:text-white">{product.name}</span>
@@ -141,11 +160,11 @@ export const ProductDetail = () => {
 
               {/* Badges */}
               <div className="absolute top-4 left-4 flex gap-2">
-                {product.featured && <Badge variant="primary">Featured</Badge>}
+                {product.featured && <Badge variant="primary">{t('product.featured')}</Badge>}
                 {product.stock < 10 && product.stock > 0 && (
-                  <Badge variant="warning">Only {product.stock} left</Badge>
+                  <Badge variant="warning">{tWithParams('cart.onlyLeft', { count: product.stock })}</Badge>
                 )}
-                {product.stock === 0 && <Badge variant="danger">Out of Stock</Badge>}
+                {product.stock === 0 && <Badge variant="danger">{t('common.outOfStock')}</Badge>}
               </div>
             </div>
 
@@ -195,7 +214,7 @@ export const ProductDetail = () => {
                 ))}
               </div>
               <span className="text-lg font-medium text-gray-900 dark:text-white">{product.rating || 0}</span>
-              <span className="text-gray-500 dark:text-gray-400">({product.numReviews || 0} reviews)</span>
+              <span className="text-gray-500 dark:text-gray-400">({product.numReviews || 0} {t('product.reviews')})</span>
             </div>
 
             {/* Price */}
@@ -235,7 +254,7 @@ export const ProductDetail = () => {
 
             {/* SKU */}
             <div className="mb-6">
-              <span className="text-sm text-gray-500 dark:text-gray-400">SKU: {product.sku}</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">{t('product.sku')}: {product.sku}</span>
             </div>
 
             {/* Tags */}
@@ -251,7 +270,7 @@ export const ProductDetail = () => {
 
             {/* Quantity Selector */}
             <div className="mb-8">
-              <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-white">Quantity</label>
+              <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-white">{t('product.selectQuantity')}</label>
               <div className="flex items-center gap-4">
                 <div className="flex items-center border border-gray-300 dark:border-burgundy-600 rounded-lg">
                   <button
@@ -271,7 +290,7 @@ export const ProductDetail = () => {
                   </button>
                 </div>
                 <span className="text-gray-600 dark:text-gray-400">
-                  {product.stock > 0 ? `${product.stock} available` : 'Out of stock'}
+                  {product.stock > 0 ? `${product.stock} ${t('product.available')}` : t('common.outOfStock')}
                 </span>
               </div>
             </div>
@@ -285,19 +304,19 @@ export const ProductDetail = () => {
                 size="lg"
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart
+                {t('common.addToCart')}
               </Button>
               <motion.button
-                onClick={() => setIsWishlisted(!isWishlisted)}
+                onClick={handleWishlistToggle}
                 className={`px-6 rounded-lg border-2 transition-colors ${
-                  isWishlisted
+                  inWishlist
                     ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-500'
                     : 'border-gray-300 dark:border-burgundy-600 hover:border-red-500 hover:text-red-500'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-current' : ''}`} />
+                <Heart className={`w-6 h-6 ${inWishlist ? 'fill-current' : ''}`} />
               </motion.button>
             </div>
 
@@ -308,8 +327,8 @@ export const ProductDetail = () => {
                   <Truck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Free Shipping</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">On orders over 150 TND</p>
+                  <p className="font-medium text-sm">{t('productDetail.freeShipping')}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('productDetail.freeShippingDesc')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -317,8 +336,8 @@ export const ProductDetail = () => {
                   <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Secure Payment</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">100% protected</p>
+                  <p className="font-medium text-sm">{t('productDetail.securePayment')}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('productDetail.securePaymentDesc')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -326,8 +345,8 @@ export const ProductDetail = () => {
                   <RefreshCw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Easy Returns</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">30-day guarantee</p>
+                  <p className="font-medium text-sm">{t('productDetail.easyReturns')}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('productDetail.easyReturnsDesc')}</p>
                 </div>
               </div>
             </div>
@@ -341,7 +360,7 @@ export const ProductDetail = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">You May Also Like</h2>
+            <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">{t('product.relatedProducts')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.slice(0, 4).map((relatedProduct, index) => (
                 <motion.div

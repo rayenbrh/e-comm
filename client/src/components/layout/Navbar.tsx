@@ -1,23 +1,31 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, User, Menu, Sun, Moon, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Menu, Sun, Moon, LogOut, Heart, Globe } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useLanguageStore } from '@/stores/languageStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useState } from 'react';
 import { MobileMenu } from './MobileMenu';
 
 export const Navbar = () => {
   const location = useLocation();
   const totalItems = useCartStore((state) => state.getTotalItems());
+  const wishlistItems = useWishlistStore((state) => state.getTotalItems());
   const { isDark, toggleTheme } = useThemeStore();
   const { user, isAuthenticated } = useAuthStore();
+  const { language, setLanguage } = useLanguageStore();
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
   const navLinks = [
-    { path: '/', label: 'Home' },
-    { path: '/products', label: 'Products' },
-    { path: '/categories', label: 'Categories' },
+    { path: '/', label: t('nav.home') },
+    { path: '/products', label: t('nav.products') },
+    { path: '/categories', label: t('nav.categories') },
+    { path: '/about', label: t('nav.about') },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -33,13 +41,13 @@ export const Navbar = () => {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <motion.div
+              <motion.img
+                src="/logo.png"
+                alt="gouidex logo"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
-                className="w-10 h-10 bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 rounded-lg flex items-center justify-center"
-              >
-                <ShoppingCart className="text-white" size={24} />
-              </motion.div>
+                className="w-14 h-14 md:w-16 md:h-16 object-contain"
+              />
               <span className="text-2xl font-bold text-gradient hidden sm:block">
                 gouidex
               </span>
@@ -74,6 +82,58 @@ export const Navbar = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-4">
+              {/* Language Selector */}
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-burgundy-800 transition flex items-center gap-1"
+                  aria-label="Select language"
+                >
+                  <Globe size={20} />
+                  <span className="text-sm font-medium hidden sm:inline">{language.toUpperCase()}</span>
+                </motion.button>
+                
+                {languageMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setLanguageMenuOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full right-0 mt-2 bg-white dark:bg-[#3a0f17] rounded-lg shadow-lg border border-gray-200 dark:border-[#2d2838] overflow-hidden z-50 min-w-[120px]"
+                    >
+                      <button
+                        onClick={() => {
+                          setLanguage('fr');
+                          setLanguageMenuOpen(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition ${
+                          language === 'fr' ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
+                        }`}
+                      >
+                        <span className="text-sm font-medium">🇫🇷 Français</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setLanguage('ar');
+                          setLanguageMenuOpen(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition ${
+                          language === 'ar' ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
+                        }`}
+                      >
+                        <span className="text-sm font-medium">🇹🇳 العربية</span>
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </div>
+
               {/* Theme Toggle */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -84,6 +144,27 @@ export const Navbar = () => {
               >
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
               </motion.button>
+
+              {/* Wishlist */}
+              <Link to="/wishlist">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                  aria-label="Wishlist"
+                >
+                  <Heart size={20} />
+                  {wishlistItems > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                    >
+                      {wishlistItems}
+                    </motion.span>
+                  )}
+                </motion.button>
+              </Link>
 
               {/* Cart */}
               <Link to="/cart">
@@ -128,7 +209,7 @@ export const Navbar = () => {
                       whileTap={{ scale: 0.95 }}
                       className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition"
                     >
-                      Login
+                      {t('nav.login')}
                     </motion.button>
                   </Link>
                   <Link to="/register">
@@ -137,7 +218,7 @@ export const Navbar = () => {
                       whileTap={{ scale: 0.95 }}
                       className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 text-white rounded-lg hover:shadow-lg transition"
                     >
-                      Sign Up
+                      {t('nav.signUp')}
                     </motion.button>
                   </Link>
                 </div>

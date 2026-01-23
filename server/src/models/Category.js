@@ -4,7 +4,6 @@ const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Category name is required'],
-    unique: true,
     trim: true,
   },
   slug: {
@@ -21,6 +20,15 @@ const categorySchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  parent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    default: null,
+  },
+  isSubCategory: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });
@@ -35,6 +43,10 @@ categorySchema.pre('validate', function(next) {
   }
   next();
 });
+
+// Index for parent queries
+categorySchema.index({ parent: 1 });
+categorySchema.index({ isSubCategory: 1 });
 
 const Category = mongoose.model('Category', categorySchema);
 

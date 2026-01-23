@@ -1,13 +1,32 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Layers } from 'lucide-react';
+import { Layers, ChevronRight } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Loader } from '@/components/ui/Loader';
+import { useState } from 'react';
 
 export const Categories = () => {
   const navigate = useNavigate();
-  const { data, isLoading } = useCategories();
+  const { data, isLoading } = useCategories(true); // Get categories with subcategories
+  const { t } = useTranslation();
   const categories = data || [];
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+
+  // Get main categories (no parent)
+  const mainCategories = categories.filter((cat: any) => !cat.parent && !cat.isSubCategory);
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -30,15 +49,15 @@ export const Categories = () => {
             <Layers className="w-12 h-12 text-yellow-600 dark:text-yellow-400" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Shop by Category
+            {t('categories.title')}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Explore our diverse range of products organized by categories. Find exactly what you're looking for.
+            {t('categories.description')}
           </p>
         </motion.div>
 
         {/* Categories Grid */}
-        {categories.length === 0 ? (
+        {mainCategories.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,58 +73,113 @@ export const Categories = () => {
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {categories.map((category, index) => (
-              <motion.div
-                key={category._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                onClick={() => navigate(`/products?category=${category._id}`)}
-                className="group cursor-pointer"
-              >
-                <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#3a0f17] shadow-lg hover:shadow-2xl transition-all duration-300">
-                  {/* Image Container */}
-                  <div className="relative h-64 overflow-hidden">
-                    <motion.img
-                      src={category.image || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500'}
-                      alt={category.name}
-                      className="w-full h-full object-cover"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+            {mainCategories.map((category: any, index: number) => {
+              const subcategories = categories.filter((cat: any) => cat.parent === category._id);
+              const isExpanded = expandedCategories.has(category._id);
 
-                    {/* Category Name on Image */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <h3 className="text-2xl font-bold text-white mb-1">
-                        {category.name}
-                      </h3>
-                    </div>
-                  </div>
+              return (
+                <motion.div
+                  key={category._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="group"
+                >
+                  <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-[#3a0f17] shadow-lg hover:shadow-2xl transition-all duration-300">
+                    {/* Image Container */}
+                    <div className="relative h-64 overflow-hidden">
+                      <motion.img
+                        src={category.image || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500'}
+                        alt={category.name}
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => navigate(`/products?category=${category._id}`)}
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.4 }}
+                      />
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
-                  {/* Description */}
-                  {category.description && (
-                    <div className="p-6">
-                      <p className="text-gray-600 dark:text-gray-300 line-clamp-2">
-                        {category.description}
-                      </p>
-                      <div className="mt-4 flex items-center text-yellow-600 dark:text-yellow-400 font-semibold group-hover:gap-2 transition-all">
-                        <span>Browse Products</span>
-                        <motion.span
-                          initial={{ x: 0 }}
-                          whileHover={{ x: 5 }}
-                          className="inline-block"
-                        >
-                          →
-                        </motion.span>
+                      {/* Category Name on Image */}
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 className="text-2xl font-bold text-white mb-1">
+                          {category.name}
+                        </h3>
+                        {subcategories.length > 0 && (
+                          <p className="text-sm text-white/80">
+                            {subcategories.length} {subcategories.length === 1 ? t('categories.subcategory') : t('categories.subcategories')}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+
+                    {/* Description */}
+                    {category.description && (
+                      <div className="p-6">
+                        <p className="text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
+                          {category.description}
+                        </p>
+
+                        {/* Subcategories */}
+                        {subcategories.length > 0 && (
+                          <div className="mb-4">
+                            <button
+                              onClick={() => toggleCategory(category._id)}
+                              className="flex items-center justify-between w-full text-left text-sm font-medium text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors mb-2"
+                            >
+                              <span>
+                                {isExpanded ? t('categories.hideSubcategories') : t('categories.showSubcategories')} ({subcategories.length})
+                              </span>
+                              <ChevronRight
+                                className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              />
+                            </button>
+
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="space-y-2 pl-4 border-l-2 border-yellow-500 dark:border-yellow-400"
+                              >
+                                {subcategories.map((subcategory: any) => (
+                                  <motion.div
+                                    key={subcategory._id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    onClick={() => navigate(`/products?category=${subcategory._id}`)}
+                                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1E0007] cursor-pointer transition-colors"
+                                  >
+                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      {subcategory.name}
+                                    </p>
+                                  </motion.div>
+                                ))}
+                              </motion.div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex items-center text-yellow-600 dark:text-yellow-400 font-semibold group-hover:gap-2 transition-all">
+                          <span
+                            onClick={() => navigate(`/products?category=${category._id}`)}
+                            className="cursor-pointer"
+                          >
+                            {t('home.exploreCategory')}
+                          </span>
+                          <motion.span
+                            initial={{ x: 0 }}
+                            whileHover={{ x: 5 }}
+                            className="inline-block"
+                          >
+                            →
+                          </motion.span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
@@ -118,10 +192,10 @@ export const Categories = () => {
         >
           <div className="bg-white dark:bg-[#3a0f17] rounded-2xl p-8 shadow-lg max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Can't find what you're looking for?
+              {t('categories.cantFind')}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Browse all our products or use the search feature to find exactly what you need.
+              {t('categories.browseAll')}
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -129,7 +203,7 @@ export const Categories = () => {
               onClick={() => navigate('/products')}
               className="px-8 py-3 bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-600 hover:from-yellow-600 hover:via-yellow-700 hover:to-amber-700 text-white font-semibold rounded-lg shadow-md transition-colors"
             >
-              View All Products
+              {t('categories.viewAllProducts')}
             </motion.button>
           </div>
         </motion.div>

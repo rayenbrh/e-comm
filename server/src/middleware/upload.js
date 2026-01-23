@@ -92,3 +92,24 @@ export const uploadCategoryImage = multer({
 // Single file upload middleware for category image
 export const uploadCategoryImageMiddleware = uploadCategoryImage.single('categoryImage');
 
+// Pack image upload configuration
+const packStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `pack-${uniqueSuffix}${ext}`);
+  },
+});
+
+export const uploadPackImage = multer({
+  storage: packStorage,
+  fileFilter: fileFilter,
+});
+
+// Single file upload middleware for pack image
+export const uploadPackImageMiddleware = uploadPackImage.single('packImage');
+

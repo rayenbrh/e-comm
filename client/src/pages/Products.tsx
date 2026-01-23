@@ -8,6 +8,7 @@ import { ProductGrid } from '@/components/product/ProductGrid';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const Products = () => {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,7 @@ export const Products = () => {
   const [sortBy, setSortBy] = useState('');
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const { t, tWithParams } = useTranslation();
 
   // Read category from URL on mount
   useEffect(() => {
@@ -37,7 +39,20 @@ export const Products = () => {
     limit: 12,
   });
 
-  const { data: categories } = useCategories();
+  const { data: categories } = useCategories(true); // Get categories with subcategories
+
+  // Flatten categories for dropdown (main categories + subcategories with indentation)
+  const flattenedCategories = categories?.reduce((acc: any[], category: any) => {
+    // Add main category
+    acc.push(category);
+    // Add subcategories if they exist
+    if (category.subcategories && category.subcategories.length > 0) {
+      category.subcategories.forEach((sub: any) => {
+        acc.push({ ...sub, displayName: `  └─ ${sub.name}` });
+      });
+    }
+    return acc;
+  }, []) || [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,10 +78,10 @@ export const Products = () => {
           className="mb-8"
         >
           <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            All Products
+            {t('products.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Discover our full collection of amazing products
+            {t('products.description')}
           </p>
         </motion.div>
 
@@ -80,13 +95,13 @@ export const Products = () => {
             <div className="card p-6 sticky top-24">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Filters
+                  {t('products.filters')}
                 </h2>
                 <button
                   onClick={resetFilters}
                   className="text-sm text-yellow-600 dark:text-yellow-400 hover:underline"
                 >
-                  Reset
+                  {t('products.reset')}
                 </button>
               </div>
 
@@ -94,13 +109,13 @@ export const Products = () => {
                 {/* Search */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Search
+                    {t('common.search')}
                   </label>
                   <form onSubmit={handleSearch}>
                     <div className="relative">
                       <Input
                         type="text"
-                        placeholder="Search products..."
+                        placeholder={t('products.searchPlaceholder')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                       />
@@ -117,7 +132,7 @@ export const Products = () => {
                 {/* Category */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Category
+                    {t('nav.categories')}
                   </label>
                   <select
                     value={selectedCategory}
@@ -127,11 +142,16 @@ export const Products = () => {
                     }}
                     className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-burgundy-600 bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 dark:focus:ring-yellow-900 outline-none transition"
                   >
-                    <option value="">All Categories</option>
-                    {categories?.map((category) => (
-                      <option key={category._id} value={category._id}>
-                        {category.name}
-                      </option>
+                    <option value="">{t('products.allCategories')}</option>
+                    {categories?.map((category: any) => (
+                      <optgroup key={category._id} label={category.name}>
+                        <option value={category._id}>{category.name}</option>
+                        {category.subcategories?.map((sub: any) => (
+                          <option key={sub._id} value={sub._id}>
+                            &nbsp;&nbsp;└─ {sub.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
@@ -139,18 +159,18 @@ export const Products = () => {
                 {/* Price Range */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Price Range
+                    {t('products.priceRange')}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="number"
-                      placeholder="Min"
+                      placeholder={t('products.min')}
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                     />
                     <Input
                       type="number"
-                      placeholder="Max"
+                      placeholder={t('products.max')}
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                     />
@@ -160,7 +180,7 @@ export const Products = () => {
                 {/* Sort */}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Sort By
+                    {t('products.sortBy')}
                   </label>
                   <select
                     value={sortBy}
@@ -170,11 +190,11 @@ export const Products = () => {
                     }}
                     className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-burgundy-600 bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200 dark:focus:ring-yellow-900 outline-none transition"
                   >
-                    <option value="">Default</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="newest">Newest</option>
+                    <option value="">{t('products.default')}</option>
+                    <option value="price-asc">{t('products.priceLowToHigh')}</option>
+                    <option value="price-desc">{t('products.priceHighToLow')}</option>
+                    <option value="rating">{t('products.highestRated')}</option>
+                    <option value="newest">{t('products.newest')}</option>
                   </select>
                 </div>
               </div>
@@ -191,20 +211,20 @@ export const Products = () => {
                 fullWidth
               >
                 <SlidersHorizontal size={20} />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                {showFilters ? t('products.hideFilters') : t('products.showFilters')}
               </Button>
             </div>
 
             {/* Results Info */}
             {data && (
               <div className="mb-6 text-gray-600 dark:text-gray-400">
-                Showing {data.products.length} of {data.pagination.total} products
+                {t('products.showing')} {data.products.length} {t('products.of')} {data.pagination.total} {t('products.products')}
               </div>
             )}
 
             {/* Products Grid */}
             {isLoading ? (
-              <Loader text="Loading products..." />
+              <Loader text={t('products.loadingProducts')} />
             ) : (
               <ProductGrid products={data?.products || []} />
             )}
@@ -217,7 +237,7 @@ export const Products = () => {
                   disabled={page === 1}
                   variant="outline"
                 >
-                  Previous
+                  {t('products.previous')}
                 </Button>
 
                 <div className="flex items-center gap-2">
@@ -241,7 +261,7 @@ export const Products = () => {
                   disabled={page === data.pagination.pages}
                   variant="outline"
                 >
-                  Next
+                  {t('products.next')}
                 </Button>
               </div>
             )}
