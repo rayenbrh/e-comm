@@ -138,17 +138,39 @@ export const ProductDetail = () => {
   };
 
   // Get display price and stock based on variant
-  const displayPrice = product.hasVariants && selectedVariant
-    ? (selectedVariant.promoPrice && selectedVariant.promoPrice > 0 ? selectedVariant.promoPrice : selectedVariant.price)
-    : (product.promoPrice && product.promoPrice > 0 ? product.promoPrice : product.price);
+  // For products with variants, show minimum price if no variant selected
+  let displayPrice: number | undefined;
+  let regularPrice: number | undefined;
   
-  const regularPrice = product.hasVariants && selectedVariant
-    ? selectedVariant.price
-    : product.price;
+  if (product.hasVariants) {
+    if (selectedVariant) {
+      displayPrice = selectedVariant.promoPrice && selectedVariant.promoPrice > 0 
+        ? selectedVariant.promoPrice 
+        : selectedVariant.price;
+      regularPrice = selectedVariant.price;
+    } else if (product.variants && product.variants.length > 0) {
+      // Show minimum price from variants
+      const prices = product.variants
+        .map(v => v.promoPrice && v.promoPrice > 0 ? v.promoPrice : v.price)
+        .filter(p => p > 0);
+      displayPrice = prices.length > 0 ? Math.min(...prices) : undefined;
+      const regularPrices = product.variants
+        .map(v => v.price)
+        .filter(p => p > 0);
+      regularPrice = regularPrices.length > 0 ? Math.min(...regularPrices) : undefined;
+    }
+  } else {
+    displayPrice = product.promoPrice && product.promoPrice > 0 
+      ? product.promoPrice 
+      : product.price;
+    regularPrice = product.price;
+  }
   
   const displayStock = product.hasVariants && selectedVariant
     ? selectedVariant.stock
-    : product.stock;
+    : (product.hasVariants 
+        ? (product.variants?.some(v => v.stock > 0) ? 1 : 0) 
+        : product.stock);
 
   // Build images array including variant images
   const buildImages = () => {
@@ -293,8 +315,18 @@ export const ProductDetail = () => {
             {/* Price */}
             <div className="mb-6">
               {(() => {
-                const hasPromo = displayPrice < regularPrice;
-                const discountPercentage = hasPromo && regularPrice > 0
+                if (displayPrice === undefined || displayPrice === null) {
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-2xl font-semibold text-gray-600 dark:text-gray-400">
+                        {t('product.selectVariant')}
+                      </span>
+                    </div>
+                  );
+                }
+                
+                const hasPromo = regularPrice !== undefined && regularPrice !== null && displayPrice < regularPrice;
+                const discountPercentage = hasPromo && regularPrice && regularPrice > 0
                   ? Math.round(((regularPrice - displayPrice) / regularPrice) * 100)
                   : 0;
                 
@@ -302,9 +334,9 @@ export const ProductDetail = () => {
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-4">
                       <span className="text-5xl font-bold text-[#510013] dark:text-white">
-                        {displayPrice.toFixed(2)} TND
+                        {product.hasVariants && !selectedVariant ? `${t('product.from')} ` : ''}{displayPrice.toFixed(2)} TND
                       </span>
-                      {hasPromo && (
+                      {hasPromo && regularPrice !== undefined && regularPrice !== null && (
                         <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
                           {regularPrice.toFixed(2)} TND
                         </span>
