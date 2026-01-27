@@ -682,9 +682,11 @@ const AddVariantAttributeForm = ({ onAdd }: { onAdd: (name: string, values: stri
   const [name, setName] = useState('');
   const [values, setValues] = useState('');
 
-  const handleAdd = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleAdd = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!name.trim()) {
       toast.error('Attribute name is required');
       return;
@@ -703,7 +705,7 @@ const AddVariantAttributeForm = ({ onAdd }: { onAdd: (name: string, values: stri
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
-      handleAdd(e as any);
+      handleAdd();
     }
   };
 
