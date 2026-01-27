@@ -10,6 +10,7 @@ import { Package, Plus, Edit, Trash2, Search, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
 import type { ProductVariant, VariantAttribute } from '@/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export const AdminProducts = () => {
   const { data: productsData, isLoading } = useProducts();
@@ -17,6 +18,7 @@ export const AdminProducts = () => {
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const { t } = useTranslation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -341,10 +343,30 @@ export const AdminProducts = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{product.sku}</td>
-                      <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">{product.price.toFixed(2)} TND</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{product.sku || '-'}</td>
+                      <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
+                        {product.hasVariants && product.variants && product.variants.length > 0 ? (
+                          <span className="text-sm">
+                            {(() => {
+                              const prices = product.variants
+                                .map((v: ProductVariant) => v.promoPrice && v.promoPrice > 0 ? v.promoPrice : v.price)
+                                .filter((p: number) => p > 0);
+                              const minPrice = prices.length > 0 ? Math.min(...prices) : undefined;
+                              return minPrice !== undefined ? `${t('product.from')} ${minPrice.toFixed(2)} TND` : t('product.selectVariant');
+                            })()}
+                          </span>
+                        ) : product.price !== undefined && product.price !== null ? (
+                          `${product.price.toFixed(2)} TND`
+                        ) : (
+                          '-'
+                        )}
+                      </td>
                       <td className="px-6 py-4">
-                        {product.promoPrice && product.promoPrice > 0 ? (
+                        {product.hasVariants ? (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {product.variants?.length || 0} {t('product.variants')}
+                          </span>
+                        ) : product.promoPrice && product.promoPrice > 0 ? (
                           <span className="font-semibold text-green-600 dark:text-green-400">
                             {product.promoPrice.toFixed(2)} TND
                           </span>
@@ -353,17 +375,23 @@ export const AdminProducts = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            product.stock === 0
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                              : product.stock < 10
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          }`}
-                        >
-                          {product.stock}
-                        </span>
+                        {product.hasVariants ? (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {product.variants?.reduce((sum: number, v: ProductVariant) => sum + (v.stock || 0), 0) || 0}
+                          </span>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              product.stock === 0
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                : product.stock !== undefined && product.stock < 10
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            }`}
+                          >
+                            {product.stock !== undefined ? product.stock : '-'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                         {product.category?.name || 'N/A'}

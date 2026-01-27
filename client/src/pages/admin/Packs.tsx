@@ -312,15 +312,25 @@ export const AdminPacks = () => {
               
               <div className="mb-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-[#510013] dark:text-white">
-                    {pack.discountPrice.toFixed(2)} TND
-                  </span>
-                  <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                    {pack.originalPrice.toFixed(2)} TND
-                  </span>
-                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                    -{pack.discountPercentage}%
-                  </span>
+                  {pack.discountPrice !== undefined && pack.discountPrice !== null ? (
+                    <>
+                      <span className="text-2xl font-bold text-[#510013] dark:text-white">
+                        {pack.discountPrice.toFixed(2)} TND
+                      </span>
+                      {pack.originalPrice !== undefined && pack.originalPrice !== null && (
+                        <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                          {pack.originalPrice.toFixed(2)} TND
+                        </span>
+                      )}
+                      {pack.discountPercentage !== undefined && pack.discountPercentage !== null && (
+                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                          -{pack.discountPercentage}%
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-lg text-gray-500 dark:text-gray-400">-</span>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {pack.products.length} {pack.products.length === 1 ? t('adminPacks.product') : t('adminPacks.products')}
@@ -402,11 +412,32 @@ export const AdminPacks = () => {
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white"
                 >
                   <option value="">{t('adminPacks.selectProduct')}</option>
-                  {products.map((product) => (
-                    <option key={product._id} value={product._id}>
-                      {product.name} - {product.price.toFixed(2)} TND
-                    </option>
-                  ))}
+                  {products.map((product) => {
+                    // Handle products with variants
+                    const hasVariants = product.hasVariants && product.variants && product.variants.length > 0;
+                    let displayPrice: number | undefined;
+                    
+                    if (hasVariants && product.variants) {
+                      const prices = product.variants
+                        .map(v => v.promoPrice && v.promoPrice > 0 ? v.promoPrice : v.price)
+                        .filter(p => p > 0);
+                      displayPrice = prices.length > 0 ? Math.min(...prices) : undefined;
+                    } else {
+                      displayPrice = product.promoPrice && product.promoPrice > 0 
+                        ? product.promoPrice 
+                        : product.price;
+                    }
+                    
+                    const priceText = displayPrice !== undefined && displayPrice !== null
+                      ? `${hasVariants ? `${t('product.from')} ` : ''}${displayPrice.toFixed(2)} TND`
+                      : t('product.selectVariant');
+                    
+                    return (
+                      <option key={product._id} value={product._id}>
+                        {product.name} - {priceText}
+                      </option>
+                    );
+                  })}
                 </select>
                 <Input
                   type="number"

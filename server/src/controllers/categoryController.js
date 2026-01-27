@@ -233,36 +233,72 @@ export const deleteCategory = async (req, res) => {
       });
     }
 
-    // Check if category has subcategories
-    const subcategoriesCount = await Category.countDocuments({ parent: category._id });
-    if (subcategoriesCount > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete category. ${subcategoriesCount} subcategory(ies) exist. Please delete subcategories first.`,
-      });
+    // Recursively delete all subcategories first
+    const deleteSubcategories = async (parentId) => {
+      const subcategories = await Category.find({ parent: parentId });
+      for (const subcategory of subcategories) {
+        // Recursively delete subcategories of subcategories
+        await deleteSubcategories(subcategory._id);
+        // Delete the subcategory image if it exists
+        if (subcategory.image && subcategory.image.startsWith('/uploads/')) {
+          const imagePath = path.join(__dirname, '../../', subcategory.image);
+          if (fs.existsSync(imagePath)) {
+            try {
+              fs.unlinkSync(imagePath);
+            } catch (error) {
+              console.error('Error deleting subcategory image:', error);
+            }
+          }
+        }
+        await subcategory.deleteOne();
+      }
+    };
+
+    // Delete all subcategories recursively
+    await deleteSubcategories(category._id);
+
+    // Update products to remove category reference (set to null or a default category)
+    // First, try to find a default category (first main category)
+    const defaultCategory = await Category.findOne({ parent: null });
+    
+    if (defaultCategory && defaultCategory._id.toString() !== category._id.toString()) {
+      // Move products to default category
+      await Product.updateMany(
+        { category: category._id },
+        { category: defaultCategory._id }
+      );
+    } else {
+      // If no default category exists, set products category to null (they will need to be reassigned)
+      await Product.updateMany(
+        { category: category._id },
+        { $unset: { category: 1 } }
+      );
     }
 
-    // Check if any products use this category
-    const productsCount = await Product.countDocuments({ category: category._id });
-
-    if (productsCount > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Cannot delete category. ${productsCount} product(s) are using this category.`,
-      });
+    // Delete the category image if it exists
+    if (category.image && category.image.startsWith('/uploads/')) {
+      const imagePath = path.join(__dirname, '../../', category.image);
+      if (fs.existsSync(imagePath)) {
+        try {
+          fs.unlinkSync(imagePath);
+        } catch (error) {
+          console.error('Error deleting category image:', error);
+        }
+      }
     }
 
     await category.deleteOne();
 
     res.json({
       success: true,
-      message: 'Category deleted successfully',
+      message: 'Category and all subcategories deleted successfully',
     });
   } catch (error) {
     console.error('Delete category error:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting category',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
