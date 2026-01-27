@@ -72,7 +72,7 @@ export const errorHandler = (err, req, res, next) => {
   if (err.code === 'LIMIT_UNEXPECTED_FILE') {
     return res.status(400).json({
       success: false,
-      message: 'Too many files uploaded. Maximum is 10 files',
+      message: 'Too many files uploaded. Maximum is 100 files',
     });
   }
 

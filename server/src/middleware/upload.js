@@ -68,8 +68,9 @@ export const uploadProductImages = multer({
   fileFilter: fileFilter,
 });
 
-// Multiple files upload middleware for product images
-export const uploadProductImagesMiddleware = uploadProductImages.array('productImages', 10); // Max 10 images
+// Multiple files upload middleware for product images and variant images (no limit)
+// Using .any() to accept productImages and variantImage_* fields dynamically
+export const uploadProductImagesMiddleware = uploadProductImages.any();
 
 // Category image upload configuration
 const categoryStorage = multer.diskStorage({
