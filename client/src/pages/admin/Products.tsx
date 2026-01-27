@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
@@ -564,12 +564,69 @@ export const AdminProducts = () => {
 
                 {/* Variants List */}
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Variants</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Add variants with their specific attributes, images, prices, and stock
-                  </p>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Variants</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Configure price, stock, and image for each variant combination
+                      </p>
+                    </div>
+                    {variantAttributes.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Generate all possible combinations
+                          const generateCombinations = (attrs: VariantAttribute[]): Record<string, string>[] => {
+                            if (attrs.length === 0) return [];
+                            if (attrs.length === 1) {
+                              return attrs[0].values.map(v => ({ [attrs[0].name]: v }));
+                            }
+                            const [first, ...rest] = attrs;
+                            const restCombinations = generateCombinations(rest);
+                            const combinations: Record<string, string>[] = [];
+                            first.values.forEach(value => {
+                              if (restCombinations.length === 0) {
+                                combinations.push({ [first.name]: value });
+                              } else {
+                                restCombinations.forEach(combo => {
+                                  combinations.push({ [first.name]: value, ...combo });
+                                });
+                              }
+                            });
+                            return combinations;
+                          };
+
+                          const newCombinations = generateCombinations(variantAttributes);
+                          const existingCombinations = variants.map(v => 
+                            JSON.stringify(Object.keys(v.attributes).sort().map(k => `${k}:${v.attributes[k]}`).join(','))
+                          );
+                          
+                          const toAdd = newCombinations.filter(combo => {
+                            const comboStr = JSON.stringify(Object.keys(combo).sort().map(k => `${k}:${combo[k]}`).join(','));
+                            return !existingCombinations.includes(comboStr);
+                          }).map(combo => ({
+                            attributes: combo,
+                            price: 0,
+                            stock: 0,
+                          }));
+
+                          if (toAdd.length > 0) {
+                            setVariants([...variants, ...toAdd]);
+                            toast.success(`Generated ${toAdd.length} variant(s)`);
+                          } else {
+                            toast.success('All combinations already exist');
+                          }
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Generate All Combinations
+                      </Button>
+                    )}
+                  </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {variants.map((variant, index) => (
                       <VariantForm
                         key={index}
@@ -592,25 +649,11 @@ export const AdminProducts = () => {
                       />
                     ))}
                     
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        if (variantAttributes.length === 0) {
-                          toast.error('Please add variant attributes first');
-                          return;
-                        }
-                        setVariants([...variants, {
-                          attributes: {},
-                          price: 0,
-                          stock: 0,
-                        }]);
-                      }}
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Variant
-                    </Button>
+                    {variants.length === 0 && variantAttributes.length > 0 && (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <p>Click "Generate All Combinations" to create variants automatically</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -747,16 +790,6 @@ const VariantForm = ({
   const [variantImage, setVariantImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(variant.image || '');
 
-  const handleAttributeChange = (attrName: string, value: string) => {
-    setLocalVariant({
-      ...localVariant,
-      attributes: {
-        ...localVariant.attributes,
-        [attrName]: value,
-      },
-    });
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -773,18 +806,21 @@ const VariantForm = ({
     }
   };
 
-  const handleUpdate = () => {
-    // Validate that all attributes are selected
-    for (const attr of variantAttributes) {
-      if (!localVariant.attributes[attr.name]) {
-        toast.error(`Please select a value for ${attr.name}`);
-        return;
+  // Auto-save on change (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Validate that all attributes are selected
+      const allAttributesSelected = variantAttributes.every(attr => localVariant.attributes[attr.name]);
+      if (allAttributesSelected && localVariant.price > 0) {
+        // If image preview is a data URL, it means a new file was selected
+        const imageFile = imagePreview && imagePreview.startsWith('data:') ? variantImage : undefined;
+        onUpdate(localVariant, imageFile || undefined);
       }
-    }
-    // If image preview is a data URL, it means a new file was selected
-    const imageFile = imagePreview && imagePreview.startsWith('data:') ? variantImage : undefined;
-    onUpdate(localVariant, imageFile || undefined);
-  };
+    }, 500);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localVariant.price, localVariant.promoPrice, localVariant.stock, imagePreview, localVariant.attributes]);
 
   return (
     <div className="p-4 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700">
@@ -799,35 +835,71 @@ const VariantForm = ({
         </button>
       </div>
 
-      <div className="space-y-4">
-        {/* Attribute Selection */}
-        {variantAttributes.map((attr) => (
-          <div key={attr.name}>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {attr.name}
+      <div className="space-y-3">
+        {/* Variant Info - Display attributes */}
+        <div className="p-3 bg-gray-50 dark:bg-[#1E0007] rounded-lg">
+          <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">Variant:</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">
+            {Object.entries(localVariant.attributes).map(([key, value]) => (
+              <span key={key} className="inline-block mr-2">
+                <span className="font-medium">{key}:</span> {value}
+              </span>
+            ))}
+          </p>
+        </div>
+
+        {/* Price, Promo Price, Stock in a grid */}
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Price (TND) *
             </label>
-            <select
-              value={localVariant.attributes[attr.name] || ''}
-              onChange={(e) => handleAttributeChange(attr.name, e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="">Select {attr.name}</option>
-              {attr.values.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
+            <input
+              type="number"
+              step="0.01"
+              value={localVariant.price || ''}
+              onChange={(e) => setLocalVariant({ ...localVariant, price: parseFloat(e.target.value) || 0 })}
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              required
+            />
           </div>
-        ))}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Promo Price (TND)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={localVariant.promoPrice?.toString() || ''}
+              onChange={(e) => setLocalVariant({ 
+                ...localVariant, 
+                promoPrice: e.target.value ? parseFloat(e.target.value) : null 
+              })}
+              placeholder="Optional"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Stock *
+            </label>
+            <input
+              type="number"
+              value={localVariant.stock || ''}
+              onChange={(e) => setLocalVariant({ ...localVariant, stock: parseInt(e.target.value) || 0 })}
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              required
+            />
+          </div>
+        </div>
 
         {/* Variant Image */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
             Variant Image (Optional)
           </label>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 px-3 py-2 text-sm bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
               <Upload className="w-4 h-4" />
               <span>Choose Image</span>
             </label>
@@ -842,7 +914,7 @@ const VariantForm = ({
                 <img
                   src={imagePreview}
                   alt="Variant preview"
-                  className="w-20 h-20 object-cover rounded-lg border-2 border-gray-300 dark:border-burgundy-600"
+                  className="w-16 h-16 object-cover rounded-lg border-2 border-gray-300 dark:border-burgundy-600"
                 />
                 <button
                   type="button"
@@ -851,7 +923,7 @@ const VariantForm = ({
                     setVariantImage(null);
                     setLocalVariant({ ...localVariant, image: undefined });
                   }}
-                  className="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full"
+                  className="absolute -top-1 -right-1 p-0.5 bg-red-600 text-white rounded-full"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -859,48 +931,6 @@ const VariantForm = ({
             )}
           </div>
         </div>
-
-        {/* Price, Promo Price, Stock */}
-        <div className="grid grid-cols-3 gap-4">
-          <Input
-            label="Price (TND)"
-            type="number"
-            step="0.01"
-            value={localVariant.price.toString()}
-            onChange={(e) => setLocalVariant({ ...localVariant, price: parseFloat(e.target.value) || 0 })}
-            required
-          />
-          <Input
-            label="Promo Price (TND)"
-            type="number"
-            step="0.01"
-            value={localVariant.promoPrice?.toString() || ''}
-            onChange={(e) => setLocalVariant({ 
-              ...localVariant, 
-              promoPrice: e.target.value ? parseFloat(e.target.value) : null 
-            })}
-            placeholder="Optional"
-          />
-          <Input
-            label="Stock"
-            type="number"
-            value={localVariant.stock.toString()}
-            onChange={(e) => setLocalVariant({ ...localVariant, stock: parseInt(e.target.value) || 0 })}
-            required
-          />
-        </div>
-
-        {/* SKU */}
-        <Input
-          label="SKU (Optional)"
-          value={localVariant.sku || ''}
-          onChange={(e) => setLocalVariant({ ...localVariant, sku: e.target.value })}
-          placeholder="SKU code"
-        />
-
-        <Button type="button" onClick={handleUpdate} className="w-full">
-          Update Variant
-        </Button>
       </div>
     </div>
   );

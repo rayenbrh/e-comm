@@ -375,11 +375,13 @@ export const ProductDetail = () => {
             )}
 
             {/* SKU */}
-            <div className="mb-6">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {t('product.sku')}: {selectedVariant?.sku || product.sku}
-              </span>
-            </div>
+            {product.sku && (
+              <div className="mb-6">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {t('product.sku')}: {product.sku}
+                </span>
+              </div>
+            )}
 
             {/* Tags */}
             {product.tags && product.tags.length > 0 && (

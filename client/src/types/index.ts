@@ -34,7 +34,6 @@ export interface ProductVariant {
   price: number;
   promoPrice?: number | null;
   stock: number;
-  sku?: string;
 }
 
 export interface VariantAttribute {
