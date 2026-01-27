@@ -632,6 +632,7 @@ export const AdminProducts = () => {
                         key={index}
                         variant={variant}
                         variantAttributes={variantAttributes}
+                        variantIndex={index}
                         onUpdate={(updatedVariant, imageFile) => {
                           const newVariants = [...variants];
                           newVariants[index] = updatedVariant;
@@ -779,16 +780,19 @@ const VariantForm = ({
   variant, 
   variantAttributes, 
   onUpdate, 
-  onRemove 
+  onRemove,
+  variantIndex
 }: { 
   variant: ProductVariant;
   variantAttributes: VariantAttribute[];
   onUpdate: (variant: ProductVariant, imageFile?: File) => void;
   onRemove: () => void;
+  variantIndex: number;
 }) => {
   const [localVariant, setLocalVariant] = useState<ProductVariant>(variant);
   const [variantImage, setVariantImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>(variant.image || '');
+  const imageInputId = `variant-image-${variantIndex}`;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -899,11 +903,15 @@ const VariantForm = ({
             Variant Image (Optional)
           </label>
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 px-3 py-2 text-sm bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
+            <label 
+              htmlFor={imageInputId}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+            >
               <Upload className="w-4 h-4" />
               <span>Choose Image</span>
             </label>
             <input
+              id={imageInputId}
               type="file"
               accept="image/*"
               onChange={handleImageChange}
