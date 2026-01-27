@@ -81,11 +81,27 @@ export const Wishlist = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence mode="popLayout">
             {items.map((product, index) => {
+              // Handle products with variants - they may not have a price at product level
+              const hasVariants = product.hasVariants && product.variants && product.variants.length > 0;
+              
+              // Get minimum price from variants if product has variants
+              let minPrice: number | undefined;
+              if (hasVariants && product.variants) {
+                const prices = product.variants
+                  .map(v => v.promoPrice && v.promoPrice > 0 ? v.promoPrice : v.price)
+                  .filter(p => p > 0);
+                minPrice = prices.length > 0 ? Math.min(...prices) : undefined;
+              }
+              
               // If promoPrice exists, show it as the display price and cross out the regular price
               const hasPromo = product.promoPrice && product.promoPrice > 0;
-              const displayPrice = hasPromo && product.promoPrice ? product.promoPrice : product.price;
-              const regularPrice = product.price;
-              const discountPercentage = hasPromo && regularPrice > 0 && product.promoPrice
+              const displayPrice = hasVariants 
+                ? minPrice 
+                : (hasPromo && product.promoPrice ? product.promoPrice : product.price);
+              const regularPrice = hasVariants 
+                ? (product.variants?.find(v => v.promoPrice && v.promoPrice > 0)?.price || minPrice)
+                : product.price;
+              const discountPercentage = hasPromo && regularPrice && regularPrice > 0 && product.promoPrice
                 ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
                 : 0;
 
@@ -135,7 +151,14 @@ export const Wishlist = () => {
                     </motion.button>
 
                     {/* Stock Badge */}
-                    {product.stock === 0 && (
+                    {!hasVariants && product.stock !== undefined && product.stock === 0 && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <span className="bg-red-500 text-white font-bold px-4 py-2 rounded-lg">
+                          {t('common.outOfStock')}
+                        </span>
+                      </div>
+                    )}
+                    {hasVariants && product.variants && product.variants.every(v => v.stock === 0) && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                         <span className="bg-red-500 text-white font-bold px-4 py-2 rounded-lg">
                           {t('common.outOfStock')}
@@ -158,12 +181,20 @@ export const Wishlist = () => {
 
                     {/* Price */}
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="text-2xl font-bold text-[#510013] dark:text-white">
-                        {displayPrice?.toFixed(2) || product.price.toFixed(2)} TND
-                      </span>
-                      {hasPromo && regularPrice > (displayPrice || 0) && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                          {regularPrice.toFixed(2)} TND
+                      {displayPrice !== undefined && displayPrice !== null ? (
+                        <>
+                          <span className="text-2xl font-bold text-[#510013] dark:text-white">
+                            {hasVariants ? `${t('product.from')} ` : ''}{displayPrice.toFixed(2)} TND
+                          </span>
+                          {hasPromo && regularPrice && regularPrice > 0 && regularPrice > displayPrice && (
+                            <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                              {regularPrice.toFixed(2)} TND
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                          {t('product.selectVariant')}
                         </span>
                       )}
                     </div>
