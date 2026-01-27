@@ -41,8 +41,12 @@ Thumbs.db
 .DS_Store
 
 # Uploads
-uploads/
+server/uploads/
 *.tmp
+
+# Production builds
+client/dist/
+server/dist/
 
 # Testing
 coverage/

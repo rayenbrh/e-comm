@@ -4,6 +4,9 @@ import jwt from 'jsonwebtoken';
  * Generate JWT access token
  */
 export const generateAccessToken = (userId) => {
+  if (!process.env.JWT_ACCESS_SECRET) {
+    throw new Error('JWT_ACCESS_SECRET is not defined in environment variables');
+  }
   return jwt.sign(
     { userId },
     process.env.JWT_ACCESS_SECRET,
@@ -15,6 +18,9 @@ export const generateAccessToken = (userId) => {
  * Generate JWT refresh token
  */
 export const generateRefreshToken = (userId) => {
+  if (!process.env.JWT_REFRESH_SECRET) {
+    throw new Error('JWT_REFRESH_SECRET is not defined in environment variables');
+  }
   return jwt.sign(
     { userId },
     process.env.JWT_REFRESH_SECRET,
@@ -27,6 +33,9 @@ export const generateRefreshToken = (userId) => {
  */
 export const verifyAccessToken = (token) => {
   try {
+    if (!process.env.JWT_ACCESS_SECRET) {
+      throw new Error('JWT_ACCESS_SECRET is not defined');
+    }
     return jwt.verify(token, process.env.JWT_ACCESS_SECRET);
   } catch (error) {
     return null;
@@ -38,6 +47,9 @@ export const verifyAccessToken = (token) => {
  */
 export const verifyRefreshToken = (token) => {
   try {
+    if (!process.env.JWT_REFRESH_SECRET) {
+      throw new Error('JWT_REFRESH_SECRET is not defined');
+    }
     return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
   } catch (error) {
     return null;

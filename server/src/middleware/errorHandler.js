@@ -11,7 +11,13 @@ export const asyncHandler = (fn) => (req, res, next) => {
  * Global error handling middleware
  */
 export const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  // Log errors in production (consider using a logging service)
+  if (process.env.NODE_ENV === 'production') {
+    // In production, log to a service or file, not console
+    // console.error('Error:', err.message, err.stack);
+  } else {
+    console.error('Error:', err);
+  }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
