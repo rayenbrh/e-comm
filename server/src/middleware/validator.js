@@ -40,9 +40,53 @@ export const loginValidation = [
 export const createProductValidation = [
   body('name').trim().notEmpty().withMessage('Product name is required'),
   body('description').trim().notEmpty().withMessage('Description is required'),
-  body('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
   body('category').notEmpty().withMessage('Category is required'),
-  body('stock').isInt({ min: 0 }).withMessage('Valid stock quantity is required'),
+  // Price and stock are only required if product doesn't have variants
+  body('price')
+    .if((value, { req }) => {
+      const hasVariants = req.body.hasVariants === 'true' || req.body.hasVariants === true;
+      return !hasVariants;
+    })
+    .isFloat({ min: 0 })
+    .withMessage('Valid price is required'),
+  body('stock')
+    .if((value, { req }) => {
+      const hasVariants = req.body.hasVariants === 'true' || req.body.hasVariants === true;
+      return !hasVariants;
+    })
+    .isInt({ min: 0 })
+    .withMessage('Valid stock quantity is required'),
+  // If hasVariants is true, validate variants
+  body('variantAttributes')
+    .if((value, { req }) => {
+      const hasVariants = req.body.hasVariants === 'true' || req.body.hasVariants === true;
+      return hasVariants;
+    })
+    .custom((value) => {
+      if (!value) return false;
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(parsed) && parsed.length > 0;
+      } catch {
+        return false;
+      }
+    })
+    .withMessage('At least one variant attribute is required when product has variants'),
+  body('variants')
+    .if((value, { req }) => {
+      const hasVariants = req.body.hasVariants === 'true' || req.body.hasVariants === true;
+      return hasVariants;
+    })
+    .custom((value) => {
+      if (!value) return false;
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+        return Array.isArray(parsed) && parsed.length > 0;
+      } catch {
+        return false;
+      }
+    })
+    .withMessage('At least one variant is required when product has variants'),
 ];
 
 /**
