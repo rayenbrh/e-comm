@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 
 export const AdminProducts = () => {
   const { data: productsData, isLoading } = useProducts();
@@ -277,7 +278,7 @@ export const AdminProducts = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                            src={getImageUrl(product.images?.[0])}
                             alt={product.name}
                             className="w-12 h-12 rounded-lg object-cover"
                           />

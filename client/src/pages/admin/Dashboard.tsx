@@ -7,6 +7,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useHeroImage, useUploadHeroImages, useDeleteHeroImage } from '@/hooks/useSettings';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
+import getImageUrl from '@/utils/imageUtils';
 import {
   Package,
   Users,
@@ -292,7 +293,7 @@ export const AdminDashboard = () => {
                   >
                     <div className="flex items-center gap-3">
                       <img
-                        src={product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                        src={getImageUrl(product.images?.[0])}
                         alt={product.name}
                         className="w-12 h-12 rounded-lg object-cover"
                       />

@@ -10,6 +10,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Badge } from '@/components/ui/Badge';
 import { ProductCard } from '@/components/product/ProductCard';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 import {
   ShoppingCart,
   Heart,
@@ -94,7 +95,9 @@ export const ProductDetail = () => {
     }
   };
 
-  const images = product.images && product.images.length > 0 ? product.images : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'];
+  const images = product.images && product.images.length > 0 
+    ? product.images.map(img => getImageUrl(img))
+    : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'];
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">

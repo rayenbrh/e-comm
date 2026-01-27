@@ -6,6 +6,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -36,7 +37,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     }
   };
 
-  const imageUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
+  const imageUrl = getImageUrl(product.images?.[0]);
   
   // If promoPrice exists, show it as the display price and cross out the regular price
   const hasPromo = product.promoPrice && product.promoPrice > 0;

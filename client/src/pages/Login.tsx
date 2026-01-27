@@ -79,16 +79,7 @@ export const Login = () => {
             </Button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm font-medium text-burgundy-900 dark:text-burgundy-400 mb-2">
-              Demo Credentials:
-            </p>
-            <div className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-              <p>Admin: admin@ecommerce.com / Admin@123</p>
-              <p>User: john@example.com / password123</p>
-            </div>
-          </div>
+
 
           {/* Links */}
           <div className="mt-6 text-center">

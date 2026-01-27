@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Package, Calendar, DollarSign, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import getImageUrl from '@/utils/imageUtils';
 
 export const OrderHistory = () => {
   const { user } = useAuthStore();
@@ -127,7 +128,7 @@ export const OrderHistory = () => {
                         className="flex gap-4 items-center"
                       >
                         <img
-                          src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                          src={getImageUrl(item.image)}
                           alt={item.name}
                           className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-burgundy-700"
                         />

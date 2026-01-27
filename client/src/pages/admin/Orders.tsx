@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Package, Calendar, DollarSign, Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import getImageUrl from '@/utils/imageUtils';
 
 export const AdminOrders = () => {
   const { data: orders, isLoading } = useOrders();
@@ -159,7 +160,7 @@ export const AdminOrders = () => {
                     {order.items?.map((item: any, itemIndex: number) => (
                       <div key={itemIndex} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-burgundy-700/50 rounded-lg">
                         <img
-                          src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                          src={getImageUrl(item.image)}
                           alt={item.name}
                           className="w-16 h-16 rounded-lg object-cover"
                         />

@@ -8,6 +8,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Badge } from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import getImageUrl from '@/utils/imageUtils';
 import {
   ShoppingCart,
   Truck,
@@ -70,9 +71,11 @@ export const PackDetail = () => {
     }
   };
 
-  const images = pack.image ? [pack.image] : pack.products[0]?.product.images?.[0] 
-    ? [pack.products[0].product.images[0]] 
-    : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'];
+  const images = pack.image 
+    ? [getImageUrl(pack.image)] 
+    : pack.products[0]?.product.images?.[0] 
+      ? [getImageUrl(pack.products[0].product.images[0])] 
+      : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'];
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
@@ -160,7 +163,7 @@ export const PackDetail = () => {
                   >
                     {item.product.images?.[0] && (
                       <img
-                        src={item.product.images[0]}
+                        src={getImageUrl(item.product.images[0])}
                         alt={item.product.name}
                         className="w-16 h-16 object-cover rounded-lg"
                       />

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CreditCard, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 
 export const Checkout = () => {
   const navigate = useNavigate();
@@ -276,7 +277,7 @@ export const Checkout = () => {
                   {items.filter(item => item.product).map((item) => (
                     <div key={item.product!._id} className="flex gap-4">
                       <img
-                        src={item.product!.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                        src={getImageUrl(item.product!.images?.[0])}
                         alt={item.product!.name}
                         className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-burgundy-700"
                       />

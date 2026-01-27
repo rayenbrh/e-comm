@@ -4,6 +4,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/Button';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
+import getImageUrl from '@/utils/imageUtils';
 
 export const Cart = () => {
   const navigate = useNavigate();
@@ -87,8 +88,8 @@ export const Cart = () => {
                 const itemName = item.type === 'product' ? item.product?.name : item.pack?.name;
                 const itemDescription = item.type === 'product' ? item.product?.description : item.pack?.description;
                 const itemImage = item.type === 'product' 
-                  ? item.product?.images?.[0] 
-                  : item.pack?.image || item.pack?.products?.[0]?.product?.images?.[0];
+                  ? getImageUrl(item.product?.images?.[0]) 
+                  : getImageUrl(item.pack?.image) || getImageUrl(item.pack?.products?.[0]?.product?.images?.[0]);
                 // Use promoPrice if available, otherwise use regular price
                 const itemPrice = item.type === 'product' 
                   ? (item.product?.promoPrice && item.product.promoPrice > 0 ? item.product.promoPrice : item.product?.price || 0)
@@ -116,7 +117,7 @@ export const Cart = () => {
                           className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-burgundy-700"
                         >
                           <img
-                            src={itemImage || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                            src={itemImage || getImageUrl(null)}
                             alt={itemName}
                             className="w-full h-full object-cover"
                           />

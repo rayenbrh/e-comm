@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 
 export const useHeroImage = () => {
   return useQuery({
@@ -8,7 +9,9 @@ export const useHeroImage = () => {
     queryFn: async () => {
       const { data } = await api.get<{ success: boolean; heroImages: string[]; heroImage: string }>('/settings/hero-image');
       // Return array of images, fallback to single image for backward compatibility
-      return data.heroImages && data.heroImages.length > 0 ? data.heroImages : [data.heroImage || '/Untitled.png'];
+      const images = data.heroImages && data.heroImages.length > 0 ? data.heroImages : [data.heroImage || '/Untitled.png'];
+      // Convert all image paths to full URLs
+      return images.map(img => getImageUrl(img));
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });

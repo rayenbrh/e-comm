@@ -6,6 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/Button';
 import { Trash2, ShoppingCart, Heart, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 
 export const Wishlist = () => {
   const navigate = useNavigate();
@@ -101,7 +102,7 @@ export const Wishlist = () => {
                   {/* Image */}
                   <Link to={`/products/${product._id}`} className="relative block aspect-square overflow-hidden bg-gray-100 dark:bg-[#3a0f17]">
                     <motion.img
-                      src={product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                      src={getImageUrl(product.images?.[0])}
                       alt={product.name}
                       className="w-full h-full object-cover"
                       whileHover={{ scale: 1.1 }}

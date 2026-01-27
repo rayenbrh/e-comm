@@ -5,6 +5,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Loader } from '@/components/ui/Loader';
 import { useState } from 'react';
+import getImageUrl from '@/utils/imageUtils';
 
 export const Categories = () => {
   const navigate = useNavigate();
@@ -89,7 +90,7 @@ export const Categories = () => {
                     {/* Image Container */}
                     <div className="relative h-64 overflow-hidden">
                       <motion.img
-                        src={category.image || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500'}
+                        src={getImageUrl(category.image)}
                         alt={category.name}
                         className="w-full h-full object-cover cursor-pointer"
                         onClick={() => navigate(`/products?category=${category._id}`)}

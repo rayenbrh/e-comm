@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCartStore } from '@/stores/cartStore';
 import toast from 'react-hot-toast';
+import getImageUrl from '@/utils/imageUtils';
 
 export const Home = () => {
   const { data: featuredData, isLoading: loadingFeatured } = useProducts({ featured: true, limit: 8 });
@@ -321,7 +322,7 @@ export const Home = () => {
                     {pack.image && (
                       <div className="relative h-48 overflow-hidden">
                         <img
-                          src={pack.image}
+                          src={getImageUrl(pack.image)}
                           alt={pack.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
@@ -415,7 +416,7 @@ export const Home = () => {
                   >
                     {category.image && (
                       <img
-                        src={category.image}
+                        src={getImageUrl(category.image)}
                         alt={category.name}
                         className="w-full h-32 object-cover rounded-lg mb-4"
                       />

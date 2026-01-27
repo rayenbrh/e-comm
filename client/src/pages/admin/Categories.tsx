@@ -9,6 +9,7 @@ import { Layers, Plus, Edit, Trash2, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { useQueryClient } from '@tanstack/react-query';
+import getImageUrl from '@/utils/imageUtils';
 
 export const AdminCategories = () => {
   const { data: categories, isLoading } = useCategories(true); // Get categories with subcategories
@@ -226,7 +227,7 @@ export const AdminCategories = () => {
               >
                 <div className="aspect-video bg-gray-100 dark:bg-burgundy-700 overflow-hidden">
                   <img
-                    src={category.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                    src={getImageUrl(category.image)}
                     alt={category.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />

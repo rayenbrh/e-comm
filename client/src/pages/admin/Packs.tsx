@@ -4,6 +4,7 @@ import { useAllPacks, useCreatePack, useUpdatePack, useDeletePack, useTogglePack
 import { useProducts } from '@/hooks/useProducts';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
+import getImageUrl from '@/utils/imageUtils';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, X, Power, Upload } from 'lucide-react';
@@ -290,7 +291,7 @@ export const AdminPacks = () => {
             >
               {pack.image && (
                 <img
-                  src={pack.image}
+                  src={getImageUrl(pack.image)}
                   alt={pack.name}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
