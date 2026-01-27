@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProduct, useRelatedProducts } from '@/hooks/useProducts';
@@ -16,7 +16,6 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
-  Check,
   Truck,
   Shield,
   RefreshCw,
@@ -222,9 +221,9 @@ export const ProductDetail = () => {
               {(() => {
                 // If promoPrice exists, show it as the display price and cross out the regular price
                 const hasPromo = product.promoPrice && product.promoPrice > 0;
-                const displayPrice = hasPromo ? product.promoPrice : product.price;
+                const displayPrice = hasPromo && product.promoPrice ? product.promoPrice : product.price;
                 const regularPrice = product.price;
-                const discountPercentage = hasPromo && regularPrice > 0 
+                const discountPercentage = hasPromo && regularPrice > 0 && product.promoPrice
                   ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
                   : 0;
                 
@@ -232,7 +231,7 @@ export const ProductDetail = () => {
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-4">
                       <span className="text-5xl font-bold text-[#510013] dark:text-white">
-                        {displayPrice.toFixed(2)} TND
+                        {displayPrice?.toFixed(2) || product.price.toFixed(2)} TND
                       </span>
                       {hasPromo && (
                         <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
@@ -262,7 +261,7 @@ export const ProductDetail = () => {
             {product.tags && product.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-8">
                 {product.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
+                  <Badge key={tag} variant="default">
                     {tag}
                   </Badge>
                 ))}

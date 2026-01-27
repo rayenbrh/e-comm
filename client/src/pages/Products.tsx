@@ -19,7 +19,7 @@ export const Products = () => {
   const [sortBy, setSortBy] = useState('');
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const { t, tWithParams } = useTranslation();
+  const { t } = useTranslation();
 
   // Read category from URL on mount
   useEffect(() => {
@@ -40,19 +40,6 @@ export const Products = () => {
   });
 
   const { data: categories } = useCategories(true); // Get categories with subcategories
-
-  // Flatten categories for dropdown (main categories + subcategories with indentation)
-  const flattenedCategories = categories?.reduce((acc: any[], category: any) => {
-    // Add main category
-    acc.push(category);
-    // Add subcategories if they exist
-    if (category.subcategories && category.subcategories.length > 0) {
-      category.subcategories.forEach((sub: any) => {
-        acc.push({ ...sub, displayName: `  └─ ${sub.name}` });
-      });
-    }
-    return acc;
-  }, []) || [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

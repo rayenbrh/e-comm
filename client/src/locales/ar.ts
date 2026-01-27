@@ -132,9 +132,7 @@ export const ar = {
         description: 'تسليم سريع وموثوق في جميع أنحاء تونس',
       },
     },
-    featuredProducts: 'المنتجات المميزة',
     viewAll: 'عرض الكل',
-    categories: 'الفئات',
     exploreCategory: 'استكشف',
     specialOffers: 'عروض خاصة',
     exclusivePacks: 'اكتشف مجموعاتنا الحصرية مع خصومات استثنائية',
@@ -357,7 +355,6 @@ export const ar = {
     noPacks: 'لم يتم العثور على مجموعات',
     confirmDelete: 'هل أنت متأكد من حذف هذه المجموعة؟',
     packName: 'اسم المجموعة',
-    description: 'الوصف',
     addProducts: 'إضافة منتجات',
     selectProduct: 'اختر منتج',
     originalPrice: 'السعر الأصلي',
@@ -386,38 +383,6 @@ export const ar = {
     loginSuccess: 'تم تسجيل الدخول بنجاح',
     registerSuccess: 'تم التسجيل بنجاح',
     logoutSuccess: 'تم تسجيل الخروج بنجاح',
-  },
-  // Checkout
-  checkout: {
-    title: 'إتمام الطلب',
-    shippingInfo: 'معلومات الشحن',
-    paymentInfo: 'معلومات الدفع',
-    orderReview: 'مراجعة الطلب',
-    placeOrder: 'تأكيد الطلب',
-  },
-  // Profile
-  profile: {
-    title: 'ملفي الشخصي',
-    orders: 'طلباتي',
-    settings: 'الإعدادات',
-  },
-  // Orders
-  orders: {
-    title: 'سجل الطلبات',
-    noOrders: 'لا توجد طلبات',
-    orderNumber: 'الطلب رقم',
-    date: 'التاريخ',
-    status: 'الحالة',
-    total: 'الإجمالي',
-    viewDetails: 'عرض التفاصيل',
-  },
-  // Admin
-  admin: {
-    dashboard: 'لوحة التحكم',
-    products: 'المنتجات',
-    orders: 'الطلبات',
-    categories: 'الفئات',
-    users: 'المستخدمون',
   },
   // 404
   notFound: {

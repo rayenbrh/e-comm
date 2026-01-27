@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { CreditCard, Lock, CheckCircle } from 'lucide-react';
+import { CreditCard, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const Checkout = () => {
@@ -50,12 +50,12 @@ export const Checkout = () => {
     try {
       // Prepare order data
       const orderData = {
-        items: items.map((item) => ({
-          product: item.product._id,
-          name: item.product.name,
+        items: items.filter(item => item.product).map((item) => ({
+          product: item.product!._id,
+          name: item.product!.name,
           quantity: item.quantity,
-          price: item.product.price,
-          image: item.product.images?.[0] || '',
+          price: item.product!.price,
+          image: item.product!.images?.[0] || '',
         })),
         subtotal: total,
         shippingCost: total >= 150 ? 0 : 25,
@@ -273,18 +273,18 @@ export const Checkout = () => {
 
                 {/* Order Items */}
                 <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
-                  {items.map((item) => (
-                    <div key={item.product._id} className="flex gap-4">
+                  {items.filter(item => item.product).map((item) => (
+                    <div key={item.product!._id} className="flex gap-4">
                       <img
-                        src={item.product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
-                        alt={item.product.name}
+                        src={item.product!.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'}
+                        alt={item.product!.name}
                         className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-burgundy-700"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.product.name}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.product!.name}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Qty: {item.quantity}</p>
                         <p className="text-sm font-semibold text-[#510013] dark:text-burgundy-500">
-                          {(item.product.price * item.quantity).toFixed(2)} TND
+                          {(item.product!.price * item.quantity).toFixed(2)} TND
                         </p>
                       </div>
                     </div>

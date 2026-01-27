@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { User, Mail, Phone, MapPin, Lock, Save, LogOut } from 'lucide-react';
+import { Save, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -145,7 +145,6 @@ export const Profile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    icon={User}
                   />
                   <Input
                     label="Email"
@@ -153,7 +152,6 @@ export const Profile = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    icon={Mail}
                   />
                   <Input
                     label="Phone"
@@ -161,14 +159,12 @@ export const Profile = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    icon={Phone}
                   />
                   <Input
                     label="Street Address"
                     name="street"
                     value={formData.street}
                     onChange={handleInputChange}
-                    icon={MapPin}
                   />
                   <Input
                     label="City"
@@ -247,7 +243,6 @@ export const Profile = () => {
                   name="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
-                  icon={Lock}
                   required
                 />
                 <Input
@@ -256,7 +251,6 @@ export const Profile = () => {
                   name="newPassword"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
-                  icon={Lock}
                   required
                 />
                 <Input
@@ -265,7 +259,6 @@ export const Profile = () => {
                   name="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
-                  icon={Lock}
                   required
                 />
                 <Button type="submit" className="w-full sm:w-auto">

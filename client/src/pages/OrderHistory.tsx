@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useOrders } from '@/hooks/useOrders';
 import { Loader } from '@/components/ui/Loader';
 import { Badge } from '@/components/ui/Badge';
-import { Package, Calendar, DollarSign, MapPin, ChevronRight } from 'lucide-react';
+import { Package, Calendar, DollarSign, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -38,7 +38,7 @@ export const OrderHistory = () => {
       case 'cancelled':
         return 'danger';
       default:
-        return 'secondary';
+        return 'default';
     }
   };
 

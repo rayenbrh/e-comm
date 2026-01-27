@@ -358,9 +358,7 @@ export const Home = () => {
                       </div>
 
                       <Button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
+                        onClick={() => {
                           addPackToCart(pack);
                           toast.success(t('home.packAddedToCart'));
                         }}

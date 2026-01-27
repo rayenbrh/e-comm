@@ -82,9 +82,9 @@ export const Wishlist = () => {
             {items.map((product, index) => {
               // If promoPrice exists, show it as the display price and cross out the regular price
               const hasPromo = product.promoPrice && product.promoPrice > 0;
-              const displayPrice = hasPromo ? product.promoPrice : product.price;
+              const displayPrice = hasPromo && product.promoPrice ? product.promoPrice : product.price;
               const regularPrice = product.price;
-              const discountPercentage = hasPromo && regularPrice > 0 
+              const discountPercentage = hasPromo && regularPrice > 0 && product.promoPrice
                 ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
                 : 0;
 
@@ -158,11 +158,11 @@ export const Wishlist = () => {
                     {/* Price */}
                     <div className="flex items-center gap-2 mb-4">
                       <span className="text-2xl font-bold text-[#510013] dark:text-white">
-                        {displayPrice?.toFixed(2)} TND
+                        {displayPrice?.toFixed(2) || product.price.toFixed(2)} TND
                       </span>
-                      {hasPromo && oldPrice > displayPrice && (
+                      {hasPromo && regularPrice > (displayPrice || 0) && (
                         <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                          {oldPrice.toFixed(2)} TND
+                          {regularPrice.toFixed(2)} TND
                         </span>
                       )}
                     </div>
@@ -170,8 +170,7 @@ export const Wishlist = () => {
                     {/* Actions */}
                     <div className="flex gap-2">
                       <Button
-                        onClick={(e) => {
-                          e.preventDefault();
+                        onClick={() => {
                           handleAddToCart(product);
                         }}
                         disabled={product.stock === 0}

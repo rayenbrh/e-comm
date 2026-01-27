@@ -4,7 +4,7 @@ import { useOrders, useUpdateOrderStatus } from '@/hooks/useOrders';
 import { Loader } from '@/components/ui/Loader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Package, Calendar, DollarSign, Eye, Edit } from 'lucide-react';
+import { Package, Calendar, DollarSign, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AdminOrders = () => {
@@ -38,7 +38,7 @@ export const AdminOrders = () => {
       case 'cancelled':
         return 'danger';
       default:
-        return 'secondary';
+        return 'default';
     }
   };
 

@@ -40,9 +40,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   
   // If promoPrice exists, show it as the display price and cross out the regular price
   const hasPromo = product.promoPrice && product.promoPrice > 0;
-  const displayPrice = hasPromo ? product.promoPrice : product.price;
+  const displayPrice = hasPromo && product.promoPrice ? product.promoPrice : product.price;
   const regularPrice = product.price;
-  const discountPercentage = hasPromo && regularPrice > 0 
+  const discountPercentage = hasPromo && regularPrice > 0 && product.promoPrice
     ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
     : 0;
 
@@ -159,7 +159,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-[#510013] dark:text-white">
-                  {displayPrice.toFixed(2)} TND
+                  {displayPrice?.toFixed(2) || product.price.toFixed(2)} TND
                 </span>
                 {hasPromo && (
                   <span className="text-sm text-gray-500 dark:text-gray-400 line-through">

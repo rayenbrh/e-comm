@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import type { CategoriesResponse, Category } from '@/types';
+import type { CategoriesResponse } from '@/types';
 
 export const useCategories = (includeSubcategories?: boolean) => {
   return useQuery({

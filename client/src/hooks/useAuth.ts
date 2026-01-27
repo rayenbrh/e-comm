@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useAuthStore } from '@/stores/authStore';
-import type { AuthResponse, User } from '@/types';
+import type { AuthResponse } from '@/types';
 import toast from 'react-hot-toast';
 
 export const useAuth = () => {

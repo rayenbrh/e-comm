@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import type { OrdersResponse, Order, OrderItem, Address } from '@/types';
+import type { OrdersResponse, Order, Address } from '@/types';
 import toast from 'react-hot-toast';
 
 interface CreateOrderData {

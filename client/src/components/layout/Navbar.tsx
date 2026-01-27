@@ -10,7 +10,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 import { MobileMenu } from './MobileMenu';
-import toast from 'react-hot-toast';
 
 export const Navbar = () => {
   const location = useLocation();

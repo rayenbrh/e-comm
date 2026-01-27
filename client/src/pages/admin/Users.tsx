@@ -125,7 +125,7 @@ export const AdminUsers = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={user.role === 'admin' ? 'primary' : 'secondary'}>
+                        <Badge variant={user.role === 'admin' ? 'primary' : 'default'}>
                           {user.role}
                         </Badge>
                       </td>

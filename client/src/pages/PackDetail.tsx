@@ -10,15 +10,9 @@ import toast from 'react-hot-toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   ShoppingCart,
-  Heart,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  Check,
   Truck,
   Shield,
   RefreshCw,
-  Package,
   ArrowRight,
 } from 'lucide-react';
 
@@ -30,7 +24,6 @@ export const PackDetail = () => {
   const { t, tWithParams } = useTranslation();
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
 
   if (!id) {
     return (
@@ -110,7 +103,7 @@ export const PackDetail = () => {
             {/* Main Image */}
             <div className="relative aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#3a0f17]">
               <motion.img
-                src={images[selectedImage]}
+                src={images[0] || ''}
                 alt={pack.name}
                 className="w-full h-full object-cover"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -148,7 +141,7 @@ export const PackDetail = () => {
                   {pack.originalPrice.toFixed(2)} TND
                 </span>
                 <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
-                  {t('packDetail.save', { percent: pack.discountPercentage })}
+                  {tWithParams('packDetail.save', { percent: pack.discountPercentage })}
                 </span>
               </div>
             </div>

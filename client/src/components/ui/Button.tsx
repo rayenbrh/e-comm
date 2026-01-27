@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 interface ButtonProps {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   type?: 'button' | 'submit' | 'reset';
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';

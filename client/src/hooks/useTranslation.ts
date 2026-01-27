@@ -2,15 +2,6 @@ import { useLanguageStore } from '@/stores/languageStore';
 import { fr } from '@/locales/fr';
 import { ar } from '@/locales/ar';
 
-type TranslationKey = keyof typeof fr;
-type NestedKey<T> = T extends object
-  ? {
-      [K in keyof T]: T[K] extends object ? `${string & K}.${NestedKey<T[K]>}` : K;
-    }[keyof T]
-  : never;
-
-type TranslationKeys = NestedKey<typeof fr>;
-
 const translations = {
   fr,
   ar,

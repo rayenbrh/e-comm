@@ -132,9 +132,7 @@ export const fr = {
         description: 'Livraison express partout en Tunisie, directement à votre porte',
       },
     },
-    featuredProducts: 'Produits en vedette',
     viewAll: 'Voir tout',
-    categories: 'Catégories',
     exploreCategory: 'Explorer',
     specialOffers: 'Offres Spéciales',
     exclusivePacks: 'Découvrez nos packs exclusifs avec des réductions exceptionnelles',
@@ -357,7 +355,6 @@ export const fr = {
     noPacks: 'Aucun pack trouvé',
     confirmDelete: 'Êtes-vous sûr de vouloir supprimer ce pack ?',
     packName: 'Nom du pack',
-    description: 'Description',
     addProducts: 'Ajouter des produits',
     selectProduct: 'Sélectionner un produit',
     originalPrice: 'Prix original',
@@ -386,38 +383,6 @@ export const fr = {
     loginSuccess: 'Connexion réussie',
     registerSuccess: 'Inscription réussie',
     logoutSuccess: 'Déconnexion réussie',
-  },
-  // Checkout
-  checkout: {
-    title: 'Finaliser la commande',
-    shippingInfo: 'Informations de livraison',
-    paymentInfo: 'Informations de paiement',
-    orderReview: 'Révision de la commande',
-    placeOrder: 'Passer la commande',
-  },
-  // Profile
-  profile: {
-    title: 'Mon Profil',
-    orders: 'Mes Commandes',
-    settings: 'Paramètres',
-  },
-  // Orders
-  orders: {
-    title: 'Historique des commandes',
-    noOrders: 'Aucune commande',
-    orderNumber: 'Commande #',
-    date: 'Date',
-    status: 'Statut',
-    total: 'Total',
-    viewDetails: 'Voir les détails',
-  },
-  // Admin
-  admin: {
-    dashboard: 'Tableau de bord',
-    products: 'Produits',
-    orders: 'Commandes',
-    categories: 'Catégories',
-    users: 'Utilisateurs',
   },
   // 404
   notFound: {
