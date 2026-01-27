@@ -27,6 +27,21 @@ export interface Category {
   updatedAt: string;
 }
 
+export interface ProductVariant {
+  _id?: string;
+  attributes: Record<string, string>; // e.g., { "Color": "Red", "Size": "M" }
+  image?: string;
+  price: number;
+  promoPrice?: number | null;
+  stock: number;
+  sku?: string;
+}
+
+export interface VariantAttribute {
+  name: string; // e.g., "Color", "Size"
+  values: string[]; // e.g., ["Red", "Blue", "Green"]
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -42,12 +57,16 @@ export interface Product {
   numReviews: number;
   tags: string[];
   featured: boolean;
+  hasVariants?: boolean;
+  variantAttributes?: VariantAttribute[];
+  variants?: ProductVariant[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CartItem {
   product?: Product;
+  selectedVariant?: ProductVariant; // Selected variant if product has variants
   pack?: {
     _id: string;
     name: string;

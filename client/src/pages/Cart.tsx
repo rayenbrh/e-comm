@@ -24,7 +24,8 @@ export const Cart = () => {
       const newQuantity = item.quantity + delta;
       if (newQuantity > 0) {
         if (type === 'product' && item.product) {
-          if (newQuantity <= item.product.stock) {
+          const maxStock = item.selectedVariant ? item.selectedVariant.stock : item.product.stock;
+          if (newQuantity <= maxStock) {
             updateQuantity(id, newQuantity, type);
           }
         } else {
@@ -88,16 +89,24 @@ export const Cart = () => {
                 const itemName = item.type === 'product' ? item.product?.name : item.pack?.name;
                 const itemDescription = item.type === 'product' ? item.product?.description : item.pack?.description;
                 const itemImage = item.type === 'product' 
-                  ? getImageUrl(item.product?.images?.[0]) 
+                  ? (item.selectedVariant?.image ? getImageUrl(item.selectedVariant.image) : getImageUrl(item.product?.images?.[0]))
                   : getImageUrl(item.pack?.image) || getImageUrl(item.pack?.products?.[0]?.product?.images?.[0]);
-                // Use promoPrice if available, otherwise use regular price
+                // Use variant price if available, otherwise use product price
                 const itemPrice = item.type === 'product' 
-                  ? (item.product?.promoPrice && item.product.promoPrice > 0 ? item.product.promoPrice : item.product?.price || 0)
+                  ? (item.selectedVariant 
+                      ? (item.selectedVariant.promoPrice && item.selectedVariant.promoPrice > 0 
+                          ? item.selectedVariant.promoPrice 
+                          : item.selectedVariant.price)
+                      : (item.product?.promoPrice && item.product.promoPrice > 0 
+                          ? item.product.promoPrice 
+                          : item.product?.price || 0))
                   : item.pack?.discountPrice || 0;
                 const itemLink = item.type === 'product' 
                   ? `/products/${item.product?._id}` 
                   : `/packs/${item.pack?._id}`;
-                const maxStock = item.type === 'product' ? item.product?.stock : undefined;
+                const maxStock = item.type === 'product' 
+                  ? (item.selectedVariant ? item.selectedVariant.stock : item.product?.stock)
+                  : undefined;
 
                 return (
                   <motion.div
@@ -147,9 +156,20 @@ export const Cart = () => {
                           </motion.button>
                         </div>
 
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
                           {itemDescription}
                         </p>
+                        {item.type === 'product' && item.selectedVariant && (
+                          <div className="mb-2">
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                              {Object.entries(item.selectedVariant.attributes).map(([key, value]) => (
+                                <span key={key} className="inline-block mr-2">
+                                  <span className="font-medium">{key}:</span> {value}
+                                </span>
+                              ))}
+                            </p>
+                          </div>
+                        )}
 
                         {item.type === 'pack' && item.pack && (
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">

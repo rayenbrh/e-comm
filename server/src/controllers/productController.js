@@ -162,7 +162,21 @@ export const getProductById = async (req, res) => {
  */
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, promoPrice, category, images, stock, sku, tags, featured } = req.body;
+    const { 
+      name, 
+      description, 
+      price, 
+      promoPrice, 
+      category, 
+      images, 
+      stock, 
+      sku, 
+      tags, 
+      featured,
+      hasVariants,
+      variantAttributes,
+      variants
+    } = req.body;
 
     // Verify category exists
     const categoryExists = await Category.findById(category);
@@ -183,23 +197,79 @@ export const createProduct = async (req, res) => {
       imagePaths = imageArray;
     }
 
-    // Price is the regular price, promoPrice is optional discounted price
-    const finalPrice = parseFloat(price);
-    const finalPromoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
-
-    const product = await Product.create({
+    // Build product data
+    const productData = {
       name,
       description,
-      price: finalPrice,
-      oldPrice: null, // Not used anymore
-      promoPrice: finalPromoPrice,
       category,
       images: imagePaths,
-      stock,
       sku,
       tags: tags || [],
       featured: featured || false,
-    });
+      hasVariants: hasVariants || false,
+    };
+
+    // If product has variants, don't require price/stock at product level
+    if (hasVariants) {
+      // Parse variant attributes and variants from JSON strings if needed
+      let parsedVariantAttributes = variantAttributes;
+      let parsedVariants = variants;
+      
+      if (typeof variantAttributes === 'string') {
+        try {
+          parsedVariantAttributes = JSON.parse(variantAttributes);
+        } catch (e) {
+          parsedVariantAttributes = [];
+        }
+      }
+      
+      if (typeof variants === 'string') {
+        try {
+          parsedVariants = JSON.parse(variants);
+        } catch (e) {
+          parsedVariants = [];
+        }
+      }
+
+      // Handle variant images
+      if (req.files) {
+        const variantImageFiles = req.files.filter(file => file.fieldname && file.fieldname.startsWith('variantImage_'));
+        const productImageFiles = req.files.filter(file => file.fieldname === 'productImages' || !file.fieldname.startsWith('variantImage_'));
+        
+        // Process variant images
+        variantImageFiles.forEach(file => {
+          const match = file.fieldname.match(/variantImage_(\d+)/);
+          if (match) {
+            const variantIndex = parseInt(match[1]);
+            if (parsedVariants && parsedVariants[variantIndex]) {
+              parsedVariants[variantIndex].image = `/uploads/${file.filename}`;
+            }
+          }
+        });
+        
+        // Process product images
+        if (productImageFiles.length > 0) {
+          imagePaths = productImageFiles.map(file => `/uploads/${file.filename}`);
+        }
+      }
+
+      productData.variantAttributes = parsedVariantAttributes || [];
+      productData.variants = parsedVariants || [];
+      // Price and stock are optional when hasVariants is true
+      if (price !== undefined) productData.price = parseFloat(price);
+      if (stock !== undefined) productData.stock = stock;
+    } else {
+      // Price is required for products without variants
+      const finalPrice = parseFloat(price);
+      const finalPromoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
+      productData.price = finalPrice;
+      productData.promoPrice = finalPromoPrice;
+      productData.stock = stock || 0;
+    }
+
+    productData.oldPrice = null; // Not used anymore
+
+    const product = await Product.create(productData);
 
     await product.populate('category', 'name slug');
 
@@ -213,6 +283,7 @@ export const createProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error creating product',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };
@@ -224,7 +295,22 @@ export const createProduct = async (req, res) => {
  */
 export const updateProduct = async (req, res) => {
   try {
-    const { name, description, price, promoPrice, category, images, stock, sku, tags, featured, rating } = req.body;
+    const { 
+      name, 
+      description, 
+      price, 
+      promoPrice, 
+      category, 
+      images, 
+      stock, 
+      sku, 
+      tags, 
+      featured, 
+      rating,
+      hasVariants,
+      variantAttributes,
+      variants
+    } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -274,22 +360,132 @@ export const updateProduct = async (req, res) => {
       product.images = finalImages;
     }
 
-    // Price is the regular price, promoPrice is optional discounted price
-    const finalPrice = price !== undefined ? parseFloat(price) : product.price;
-    const finalPromoPrice = promoPrice !== undefined ? (promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null) : product.promoPrice;
-
     // Update fields
     if (name) product.name = name;
     if (description) product.description = description;
-    if (price !== undefined) product.price = finalPrice;
-    if (promoPrice !== undefined) product.promoPrice = finalPromoPrice;
-    product.oldPrice = null; // Not used anymore
     if (category) product.category = category;
-    if (stock !== undefined) product.stock = stock;
     if (sku) product.sku = sku;
     if (tags) product.tags = tags;
     if (featured !== undefined) product.featured = featured;
     if (rating !== undefined) product.rating = rating;
+    product.oldPrice = null; // Not used anymore
+
+    // Handle variants
+    if (hasVariants !== undefined) {
+      product.hasVariants = hasVariants;
+      
+      if (hasVariants) {
+        // Parse variant attributes and variants from JSON strings if needed
+        let parsedVariantAttributes = variantAttributes;
+        let parsedVariants = variants;
+        
+        if (typeof variantAttributes === 'string') {
+          try {
+            parsedVariantAttributes = JSON.parse(variantAttributes);
+          } catch (e) {
+            parsedVariantAttributes = product.variantAttributes || [];
+          }
+        }
+        
+        if (typeof variants === 'string') {
+          try {
+            parsedVariants = JSON.parse(variants);
+          } catch (e) {
+            parsedVariants = product.variants || [];
+          }
+        }
+
+        // Handle variant images
+        if (req.files) {
+          const variantImageFiles = req.files.filter(file => file.fieldname && file.fieldname.startsWith('variantImage_'));
+          
+          // Process variant images
+          variantImageFiles.forEach(file => {
+            const match = file.fieldname.match(/variantImage_(\d+)/);
+            if (match) {
+              const variantIndex = parseInt(match[1]);
+              if (parsedVariants && parsedVariants[variantIndex]) {
+                parsedVariants[variantIndex].image = `/uploads/${file.filename}`;
+              }
+            }
+          });
+        }
+
+        // Product has variants
+        product.variantAttributes = parsedVariantAttributes || [];
+        product.variants = parsedVariants || [];
+        // Price and stock are optional when hasVariants is true
+        if (price !== undefined) product.price = parseFloat(price);
+        if (stock !== undefined) product.stock = stock;
+        if (promoPrice !== undefined) product.promoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
+      } else {
+        // Product doesn't have variants, price and stock are required
+        if (price !== undefined) product.price = parseFloat(price);
+        if (stock !== undefined) product.stock = stock;
+        const finalPromoPrice = promoPrice !== undefined ? (promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null) : product.promoPrice;
+        product.promoPrice = finalPromoPrice;
+        // Clear variants
+        product.variantAttributes = [];
+        product.variants = [];
+      }
+    } else {
+      // hasVariants not being updated, handle price/stock based on current state
+      if (!product.hasVariants) {
+        // Product doesn't have variants, update price/stock normally
+        if (price !== undefined) product.price = parseFloat(price);
+        if (stock !== undefined) product.stock = stock;
+        if (promoPrice !== undefined) {
+          product.promoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
+        }
+      } else {
+        // Product has variants, price/stock are optional
+        if (price !== undefined) product.price = parseFloat(price);
+        if (stock !== undefined) product.stock = stock;
+        if (promoPrice !== undefined) {
+          product.promoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
+        }
+        // Update variants if provided
+        if (variantAttributes !== undefined) {
+          let parsedVariantAttributes = variantAttributes;
+          if (typeof variantAttributes === 'string') {
+            try {
+              parsedVariantAttributes = JSON.parse(variantAttributes);
+            } catch (e) {
+              parsedVariantAttributes = product.variantAttributes || [];
+            }
+          }
+          product.variantAttributes = parsedVariantAttributes;
+        }
+        if (variants !== undefined) {
+          let parsedVariants = variants;
+          if (typeof variants === 'string') {
+            try {
+              parsedVariants = JSON.parse(variants);
+            } catch (e) {
+              parsedVariants = product.variants || [];
+            }
+          }
+
+          // Handle variant images
+          if (req.files) {
+            const variantImageFiles = req.files.filter(file => file.fieldname && file.fieldname.startsWith('variantImage_'));
+            
+            // Process variant images
+            variantImageFiles.forEach(file => {
+              const match = file.fieldname.match(/variantImage_(\d+)/);
+              if (match) {
+                const variantIndex = parseInt(match[1]);
+                if (parsedVariants && parsedVariants[variantIndex]) {
+                  parsedVariants[variantIndex].image = `/uploads/${file.filename}`;
+                }
+              }
+            });
+          }
+
+          product.variants = parsedVariants;
+        }
+      }
+    }
 
     await product.save();
     await product.populate('category', 'name slug');
@@ -304,6 +500,7 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error updating product',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 };

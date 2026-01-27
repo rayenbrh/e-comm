@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CartItem, Product } from '@/types';
+import type { CartItem, Product, ProductVariant } from '@/types';
 import type { Pack } from '@/hooks/usePacks';
 
 interface CartState {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, variant?: import('@/types').ProductVariant) => void;
   addPackToCart: (pack: Pack, quantity?: number) => void;
   removeFromCart: (itemId: string, type: 'product' | 'pack') => void;
   updateQuantity: (itemId: string, quantity: number, type: 'product' | 'pack') => void;
@@ -19,24 +19,48 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
 
-      addToCart: (product, quantity = 1) => {
+      addToCart: (product, quantity = 1, variant?: ProductVariant) => {
         set((state) => {
-          const existingItem = state.items.find(
-            (item) => item.type === 'product' && item.product?._id === product._id
-          );
+          // For products with variants, we need to match both product ID and variant attributes
+          const existingItem = state.items.find((item) => {
+            if (item.type === 'product' && item.product?._id === product._id) {
+              if (product.hasVariants && variant) {
+                // Match variant by comparing attributes
+                const itemVariant = item.selectedVariant;
+                if (!itemVariant) return false;
+                return Object.keys(variant.attributes).every(
+                  key => variant.attributes[key] === itemVariant.attributes[key]
+                ) && Object.keys(variant.attributes).length === Object.keys(itemVariant.attributes).length;
+              } else {
+                // No variants, match by product ID only
+                return !item.selectedVariant;
+              }
+            }
+            return false;
+          });
 
           if (existingItem) {
             return {
-              items: state.items.map((item) =>
-                item.type === 'product' && item.product?._id === product._id
-                  ? { ...item, quantity: item.quantity + quantity }
-                  : item
-              ),
+              items: state.items.map((item) => {
+                if (item.type === 'product' && item.product?._id === product._id) {
+                  if (product.hasVariants && variant) {
+                    const itemVariant = item.selectedVariant;
+                    if (itemVariant && Object.keys(variant.attributes).every(
+                      key => variant.attributes[key] === itemVariant.attributes[key]
+                    ) && Object.keys(variant.attributes).length === Object.keys(itemVariant.attributes).length) {
+                      return { ...item, quantity: item.quantity + quantity };
+                    }
+                  } else if (!item.selectedVariant) {
+                    return { ...item, quantity: item.quantity + quantity };
+                  }
+                }
+                return item;
+              }),
             };
           }
 
           return {
-            items: [...state.items, { product, quantity, type: 'product' }],
+            items: [...state.items, { product, quantity, type: 'product', selectedVariant: variant }],
           };
         });
       },
@@ -120,7 +144,14 @@ export const useCartStore = create<CartState>()(
       getTotalPrice: () => {
         return get().items.reduce((total, item) => {
           if (item.type === 'product' && item.product) {
-            // Use promoPrice if available, otherwise use regular price
+            // If product has variants and a variant is selected, use variant price
+            if (item.product.hasVariants && item.selectedVariant) {
+              const price = item.selectedVariant.promoPrice && item.selectedVariant.promoPrice > 0
+                ? item.selectedVariant.promoPrice
+                : item.selectedVariant.price;
+              return total + price * item.quantity;
+            }
+            // Otherwise use product price
             const price = item.product.promoPrice && item.product.promoPrice > 0 
               ? item.product.promoPrice 
               : item.product.price;

@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
+import type { ProductVariant, VariantAttribute } from '@/types';
 
 export const AdminProducts = () => {
   const { data: productsData, isLoading } = useProducts();
@@ -32,9 +33,13 @@ export const AdminProducts = () => {
     images: '',
     tags: '',
     featured: false,
+    hasVariants: false,
   });
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [variantAttributes, setVariantAttributes] = useState<VariantAttribute[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variantImages, setVariantImages] = useState<Map<number, File>>(new Map());
 
   const products = productsData?.products || [];
 
@@ -49,17 +54,20 @@ export const AdminProducts = () => {
       setFormData({
         name: product.name,
         description: product.description,
-        price: product.price.toString(),
+        price: product.price?.toString() || '',
         promoPrice: product.promoPrice?.toString() || '',
-        stock: product.stock.toString(),
+        stock: product.stock?.toString() || '',
         category: product.category?._id || product.category || '',
-        sku: product.sku,
+        sku: product.sku || '',
         images: product.images?.join(', ') || '',
         tags: product.tags?.join(', ') || '',
         featured: product.featured || false,
+        hasVariants: product.hasVariants || false,
       });
       setImagePreviews(product.images || []);
       setSelectedImages([]);
+      setVariantAttributes(product.variantAttributes || []);
+      setVariants(product.variants || []);
     } else {
       setEditingProduct(null);
       setFormData({
@@ -73,9 +81,12 @@ export const AdminProducts = () => {
         images: '',
         tags: '',
         featured: false,
+        hasVariants: false,
       });
       setImagePreviews([]);
       setSelectedImages([]);
+      setVariantAttributes([]);
+      setVariants([]);
     }
     setIsModalOpen(true);
   };
@@ -94,9 +105,12 @@ export const AdminProducts = () => {
       images: '',
       tags: '',
       featured: false,
+      hasVariants: false,
     });
     setImagePreviews([]);
     setSelectedImages([]);
+    setVariantAttributes([]);
+    setVariants([]);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,15 +154,47 @@ export const AdminProducts = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation for variants
+    if (formData.hasVariants) {
+      if (variantAttributes.length === 0) {
+        toast.error('Please add at least one variant attribute (e.g., Color, Size)');
+        return;
+      }
+      if (variants.length === 0) {
+        toast.error('Please add at least one variant');
+        return;
+      }
+    } else {
+      if (!formData.price || !formData.stock) {
+        toast.error('Price and stock are required for products without variants');
+        return;
+      }
+    }
+
     const formDataToSend = new FormData();
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
-    formDataToSend.append('price', formData.price);
-    if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
-    formDataToSend.append('stock', formData.stock);
     formDataToSend.append('category', formData.category);
     formDataToSend.append('tags', formData.tags);
     formDataToSend.append('featured', formData.featured.toString());
+    formDataToSend.append('hasVariants', formData.hasVariants.toString());
+
+    if (formData.hasVariants) {
+      // Product with variants
+      formDataToSend.append('variantAttributes', JSON.stringify(variantAttributes));
+      formDataToSend.append('variants', JSON.stringify(variants));
+      // Price and stock are optional for products with variants
+      if (formData.price) formDataToSend.append('price', formData.price);
+      if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
+      if (formData.stock) formDataToSend.append('stock', formData.stock);
+    } else {
+      // Product without variants
+      formDataToSend.append('price', formData.price);
+      if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
+      formDataToSend.append('stock', formData.stock);
+    }
+
+    if (formData.sku) formDataToSend.append('sku', formData.sku);
 
     // Collect all final images: existing images that are still in previews + new uploaded images
     if (editingProduct) {
@@ -169,6 +215,11 @@ export const AdminProducts = () => {
     // Add new uploaded images
     selectedImages.forEach(file => {
       formDataToSend.append('productImages', file);
+    });
+
+    // Add variant images
+    variantImages.forEach((file, index) => {
+      formDataToSend.append(`variantImage_${index}`, file);
     });
 
     try {
@@ -364,34 +415,6 @@ export const AdminProducts = () => {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Price (TND)"
-                type="number"
-                step="0.01"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
-              />
-              <Input
-                label="Promo Price (TND) - Optional"
-                type="number"
-                step="0.01"
-                name="promoPrice"
-                value={formData.promoPrice}
-                onChange={handleInputChange}
-                placeholder="Discounted price"
-              />
-            </div>
-            <Input
-              label="Stock"
-              type="number"
-              name="stock"
-              value={formData.stock}
-              onChange={handleInputChange}
-              required
-            />
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
@@ -477,6 +500,156 @@ export const AdminProducts = () => {
               onChange={handleInputChange}
               placeholder="tag1, tag2, tag3"
             />
+            
+            {/* Variants Toggle */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="hasVariants"
+                checked={formData.hasVariants}
+                onChange={(e) => {
+                  setFormData({ ...formData, hasVariants: e.target.checked });
+                  if (!e.target.checked) {
+                    setVariantAttributes([]);
+                    setVariants([]);
+                  }
+                }}
+                className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                This product has variants (Color, Size, etc.)
+              </label>
+            </div>
+
+            {/* Variants Configuration */}
+            {formData.hasVariants && (
+              <div className="space-y-4 p-4 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-gray-50 dark:bg-[#1E0007]">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Variant Attributes</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Define the attributes for variants (e.g., Color, Size)
+                </p>
+                
+                {/* Add Variant Attribute */}
+                <div className="space-y-2">
+                  {variantAttributes.map((attr, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-burgundy-700 rounded">
+                      <span className="font-medium text-gray-900 dark:text-white">{attr.name}:</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {attr.values.join(', ')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVariantAttributes(variantAttributes.filter((_, i) => i !== index));
+                          // Remove variants that use this attribute
+                          setVariants(variants.filter(v => !v.attributes[attr.name]));
+                        }}
+                        className="ml-auto p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  <AddVariantAttributeForm
+                    onAdd={(name, values) => {
+                      if (variantAttributes.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+                        toast.error('This attribute already exists');
+                        return;
+                      }
+                      setVariantAttributes([...variantAttributes, { name, values }]);
+                    }}
+                  />
+                </div>
+
+                {/* Variants List */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Variants</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Add variants with their specific attributes, images, prices, and stock
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {variants.map((variant, index) => (
+                      <VariantForm
+                        key={index}
+                        variant={variant}
+                        variantAttributes={variantAttributes}
+                        onUpdate={(updatedVariant, imageFile) => {
+                          const newVariants = [...variants];
+                          newVariants[index] = updatedVariant;
+                          setVariants(newVariants);
+                          if (imageFile) {
+                            setVariantImages(new Map(variantImages.set(index, imageFile)));
+                          }
+                        }}
+                        onRemove={() => {
+                          setVariants(variants.filter((_, i) => i !== index));
+                          const newMap = new Map(variantImages);
+                          newMap.delete(index);
+                          setVariantImages(newMap);
+                        }}
+                      />
+                    ))}
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (variantAttributes.length === 0) {
+                          toast.error('Please add variant attributes first');
+                          return;
+                        }
+                        setVariants([...variants, {
+                          attributes: {},
+                          price: 0,
+                          stock: 0,
+                        }]);
+                      }}
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Variant
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Price and Stock - only show if no variants */}
+            {!formData.hasVariants && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Price (TND)"
+                    type="number"
+                    step="0.01"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <Input
+                    label="Promo Price (TND) - Optional"
+                    type="number"
+                    step="0.01"
+                    name="promoPrice"
+                    value={formData.promoPrice}
+                    onChange={handleInputChange}
+                    placeholder="Discounted price"
+                  />
+                </div>
+                <Input
+                  label="Stock"
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  required
+                />
+              </>
+            )}
+
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -499,6 +672,224 @@ export const AdminProducts = () => {
             </div>
           </form>
         </Modal>
+      </div>
+    </div>
+  );
+};
+
+// Component for adding variant attributes
+const AddVariantAttributeForm = ({ onAdd }: { onAdd: (name: string, values: string[]) => void }) => {
+  const [name, setName] = useState('');
+  const [values, setValues] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error('Attribute name is required');
+      return;
+    }
+    const valuesArray = values.split(',').map(v => v.trim()).filter(v => v);
+    if (valuesArray.length === 0) {
+      toast.error('Please add at least one value');
+      return;
+    }
+    onAdd(name.trim(), valuesArray);
+    setName('');
+    setValues('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-2">
+      <Input
+        placeholder="Attribute name (e.g., Color)"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="flex-1"
+      />
+      <Input
+        placeholder="Values (comma-separated, e.g., Red, Blue, Green)"
+        value={values}
+        onChange={(e) => setValues(e.target.value)}
+        className="flex-1"
+      />
+      <Button type="submit" size="sm">
+        <Plus className="w-4 h-4 mr-1" />
+        Add
+      </Button>
+    </form>
+  );
+};
+
+// Component for editing a variant
+const VariantForm = ({ 
+  variant, 
+  variantAttributes, 
+  onUpdate, 
+  onRemove 
+}: { 
+  variant: ProductVariant;
+  variantAttributes: VariantAttribute[];
+  onUpdate: (variant: ProductVariant, imageFile?: File) => void;
+  onRemove: () => void;
+}) => {
+  const [localVariant, setLocalVariant] = useState<ProductVariant>(variant);
+  const [variantImage, setVariantImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>(variant.image || '');
+
+  const handleAttributeChange = (attrName: string, value: string) => {
+    setLocalVariant({
+      ...localVariant,
+      attributes: {
+        ...localVariant.attributes,
+        [attrName]: value,
+      },
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      setVariantImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpdate = () => {
+    // Validate that all attributes are selected
+    for (const attr of variantAttributes) {
+      if (!localVariant.attributes[attr.name]) {
+        toast.error(`Please select a value for ${attr.name}`);
+        return;
+      }
+    }
+    // If image preview is a data URL, it means a new file was selected
+    const imageFile = imagePreview && imagePreview.startsWith('data:') ? variantImage : undefined;
+    onUpdate(localVariant, imageFile || undefined);
+  };
+
+  return (
+    <div className="p-4 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-semibold text-gray-900 dark:text-white">Variant</h4>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {/* Attribute Selection */}
+        {variantAttributes.map((attr) => (
+          <div key={attr.name}>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {attr.name}
+            </label>
+            <select
+              value={localVariant.attributes[attr.name] || ''}
+              onChange={(e) => handleAttributeChange(attr.name, e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="">Select {attr.name}</option>
+              {attr.values.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+
+        {/* Variant Image */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Variant Image (Optional)
+          </label>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
+              <Upload className="w-4 h-4" />
+              <span>Choose Image</span>
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            {imagePreview && (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Variant preview"
+                  className="w-20 h-20 object-cover rounded-lg border-2 border-gray-300 dark:border-burgundy-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImagePreview('');
+                    setVariantImage(null);
+                    setLocalVariant({ ...localVariant, image: undefined });
+                  }}
+                  className="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Price, Promo Price, Stock */}
+        <div className="grid grid-cols-3 gap-4">
+          <Input
+            label="Price (TND)"
+            type="number"
+            step="0.01"
+            value={localVariant.price.toString()}
+            onChange={(e) => setLocalVariant({ ...localVariant, price: parseFloat(e.target.value) || 0 })}
+            required
+          />
+          <Input
+            label="Promo Price (TND)"
+            type="number"
+            step="0.01"
+            value={localVariant.promoPrice?.toString() || ''}
+            onChange={(e) => setLocalVariant({ 
+              ...localVariant, 
+              promoPrice: e.target.value ? parseFloat(e.target.value) : null 
+            })}
+            placeholder="Optional"
+          />
+          <Input
+            label="Stock"
+            type="number"
+            value={localVariant.stock.toString()}
+            onChange={(e) => setLocalVariant({ ...localVariant, stock: parseInt(e.target.value) || 0 })}
+            required
+          />
+        </div>
+
+        {/* SKU */}
+        <Input
+          label="SKU (Optional)"
+          value={localVariant.sku || ''}
+          onChange={(e) => setLocalVariant({ ...localVariant, sku: e.target.value })}
+          placeholder="SKU code"
+        />
+
+        <Button type="button" onClick={handleUpdate} className="w-full">
+          Update Variant
+        </Button>
       </div>
     </div>
   );

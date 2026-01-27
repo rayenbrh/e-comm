@@ -12,7 +12,9 @@ const productSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: [true, 'Product price is required'],
+    required: function() {
+      return !this.hasVariants;
+    },
     min: [0, 'Price cannot be negative'],
   },
   oldPrice: {
@@ -35,7 +37,9 @@ const productSchema = new mongoose.Schema({
   }],
   stock: {
     type: Number,
-    required: [true, 'Stock quantity is required'],
+    required: function() {
+      return !this.hasVariants;
+    },
     min: [0, 'Stock cannot be negative'],
     default: 0,
   },
@@ -62,6 +66,51 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // Variants support
+  hasVariants: {
+    type: Boolean,
+    default: false,
+  },
+  variantAttributes: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    }, // e.g., "Color", "Size"
+    values: [{
+      type: String,
+      trim: true,
+    }], // e.g., ["Red", "Blue", "Green"] or ["S", "M", "L"]
+  }],
+  variants: [{
+    attributes: {
+      type: Map,
+      of: String,
+      required: true,
+    }, // e.g., { "Color": "Red", "Size": "M" }
+    image: {
+      type: String,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: [0, 'Price cannot be negative'],
+    },
+    promoPrice: {
+      type: Number,
+      min: [0, 'Promo price cannot be negative'],
+      default: null,
+    },
+    stock: {
+      type: Number,
+      required: true,
+      min: [0, 'Stock cannot be negative'],
+      default: 0,
+    },
+    sku: {
+      type: String,
+    },
+  }],
 }, {
   timestamps: true,
 });

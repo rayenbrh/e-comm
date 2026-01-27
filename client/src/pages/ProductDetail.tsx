@@ -33,6 +33,8 @@ export const ProductDetail = () => {
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
 
   const inWishlist = product ? isInWishlist(product._id) : false;
 
@@ -71,7 +73,11 @@ export const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product, quantity);
+      if (product.hasVariants && !selectedVariant) {
+        toast.error('Please select a variant');
+        return;
+      }
+      addToCart(product, quantity, selectedVariant || undefined);
       toast.success(tWithParams('productDetail.addedToCart', { quantity: quantity.toString(), name: product.name }));
     }
   };
@@ -89,15 +95,79 @@ export const ProductDetail = () => {
   };
 
   const handleQuantityChange = (delta: number) => {
+    const maxStock = product.hasVariants && selectedVariant 
+      ? selectedVariant.stock 
+      : product.stock;
     const newQuantity = quantity + delta;
-    if (newQuantity >= 1 && newQuantity <= product.stock) {
+    if (newQuantity >= 1 && newQuantity <= maxStock) {
       setQuantity(newQuantity);
     }
   };
 
-  const images = product.images && product.images.length > 0 
-    ? product.images.map(img => getImageUrl(img))
-    : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'];
+  // Handle variant attribute selection
+  const handleAttributeChange = (attrName: string, value: string) => {
+    const newAttributes = { ...selectedAttributes, [attrName]: value };
+    setSelectedAttributes(newAttributes);
+    
+    // Find matching variant
+    if (product.variants) {
+      const matchingVariant = product.variants.find(variant => {
+        return Object.keys(newAttributes).every(key => 
+          variant.attributes[key] === newAttributes[key]
+        ) && Object.keys(variant.attributes).length === Object.keys(newAttributes).length;
+      });
+      
+      if (matchingVariant) {
+        setSelectedVariant(matchingVariant);
+        // Update selected image if variant has an image
+        if (matchingVariant.image) {
+          const variantImageIndex = product.images?.indexOf(matchingVariant.image);
+          if (variantImageIndex !== undefined && variantImageIndex >= 0) {
+            setSelectedImage(variantImageIndex);
+          }
+        }
+        // Reset quantity if it exceeds variant stock
+        if (quantity > matchingVariant.stock) {
+          setQuantity(1);
+        }
+      } else {
+        setSelectedVariant(null);
+      }
+    }
+  };
+
+  // Get display price and stock based on variant
+  const displayPrice = product.hasVariants && selectedVariant
+    ? (selectedVariant.promoPrice && selectedVariant.promoPrice > 0 ? selectedVariant.promoPrice : selectedVariant.price)
+    : (product.promoPrice && product.promoPrice > 0 ? product.promoPrice : product.price);
+  
+  const regularPrice = product.hasVariants && selectedVariant
+    ? selectedVariant.price
+    : product.price;
+  
+  const displayStock = product.hasVariants && selectedVariant
+    ? selectedVariant.stock
+    : product.stock;
+
+  // Build images array including variant images
+  const buildImages = () => {
+    const baseImages = product.images && product.images.length > 0 
+      ? product.images.map(img => getImageUrl(img))
+      : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'];
+    
+    // Add variant images if they're not already in base images
+    if (product.variants) {
+      product.variants.forEach(variant => {
+        if (variant.image && !baseImages.includes(getImageUrl(variant.image))) {
+          baseImages.push(getImageUrl(variant.image));
+        }
+      });
+    }
+    
+    return baseImages;
+  };
+  
+  const images = buildImages();
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
@@ -163,10 +233,10 @@ export const ProductDetail = () => {
               {/* Badges */}
               <div className="absolute top-4 left-4 flex gap-2">
                 {product.featured && <Badge variant="primary">{t('product.featured')}</Badge>}
-                {product.stock < 10 && product.stock > 0 && (
-                  <Badge variant="warning">{tWithParams('cart.onlyLeft', { count: product.stock })}</Badge>
+                {displayStock < 10 && displayStock > 0 && (
+                  <Badge variant="warning">{tWithParams('cart.onlyLeft', { count: displayStock })}</Badge>
                 )}
-                {product.stock === 0 && <Badge variant="danger">{t('common.outOfStock')}</Badge>}
+                {displayStock === 0 && <Badge variant="danger">{t('common.outOfStock')}</Badge>}
               </div>
             </div>
 
@@ -222,19 +292,16 @@ export const ProductDetail = () => {
             {/* Price */}
             <div className="mb-6">
               {(() => {
-                // If promoPrice exists, show it as the display price and cross out the regular price
-                const hasPromo = product.promoPrice && product.promoPrice > 0;
-                const displayPrice = hasPromo && product.promoPrice ? product.promoPrice : product.price;
-                const regularPrice = product.price;
-                const discountPercentage = hasPromo && regularPrice > 0 && product.promoPrice
-                  ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
+                const hasPromo = displayPrice < regularPrice;
+                const discountPercentage = hasPromo && regularPrice > 0
+                  ? Math.round(((regularPrice - displayPrice) / regularPrice) * 100)
                   : 0;
                 
                 return (
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-4">
                       <span className="text-5xl font-bold text-[#510013] dark:text-white">
-                        {displayPrice?.toFixed(2) || product.price.toFixed(2)} TND
+                        {displayPrice.toFixed(2)} TND
                       </span>
                       {hasPromo && (
                         <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
@@ -255,9 +322,62 @@ export const ProductDetail = () => {
             {/* Description */}
             <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">{product.description}</p>
 
+            {/* Variant Selection */}
+            {product.hasVariants && product.variantAttributes && product.variantAttributes.length > 0 && (
+              <div className="mb-8 space-y-4">
+                {product.variantAttributes.map((attr) => (
+                  <div key={attr.name}>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      {attr.name}:
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {attr.values.map((value) => {
+                        const isSelected = selectedAttributes[attr.name] === value;
+                        const isAvailable = product.variants?.some(v => 
+                          v.attributes[attr.name] === value && v.stock > 0
+                        );
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => handleAttributeChange(attr.name, value)}
+                            disabled={!isAvailable}
+                            className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                              isSelected
+                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                                : isAvailable
+                                ? 'border-gray-300 dark:border-burgundy-600 hover:border-indigo-500 text-gray-700 dark:text-gray-300'
+                                : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {selectedVariant && (
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-800 dark:text-green-300">
+                      Variant selected: {Object.entries(selectedVariant.attributes).map(([key, value]) => `${key}: ${value}`).join(', ')}
+                    </p>
+                  </div>
+                )}
+                {!selectedVariant && Object.keys(selectedAttributes).length > 0 && (
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                      Please select all attributes to see available variants
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* SKU */}
             <div className="mb-6">
-              <span className="text-sm text-gray-500 dark:text-gray-400">{t('product.sku')}: {product.sku}</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {t('product.sku')}: {selectedVariant?.sku || product.sku}
+              </span>
             </div>
 
             {/* Tags */}
@@ -287,13 +407,13 @@ export const ProductDetail = () => {
                   <button
                     onClick={() => handleQuantityChange(1)}
                     className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= displayStock}
                   >
                     +
                   </button>
                 </div>
                 <span className="text-gray-600 dark:text-gray-400">
-                  {product.stock > 0 ? `${product.stock} ${t('product.available')}` : t('common.outOfStock')}
+                  {displayStock > 0 ? `${displayStock} ${t('product.available')}` : t('common.outOfStock')}
                 </span>
               </div>
             </div>
@@ -302,7 +422,7 @@ export const ProductDetail = () => {
             <div className="flex gap-4 mb-8">
               <Button
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={displayStock === 0 || (product.hasVariants && !selectedVariant)}
                 className="flex-1"
                 size="lg"
               >
