@@ -39,11 +39,27 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
   const imageUrl = getImageUrl(product.images?.[0]);
   
+  // Handle products with variants - they may not have a price at product level
+  const hasVariants = product.hasVariants && product.variants && product.variants.length > 0;
+  
+  // Get minimum price from variants if product has variants
+  let minPrice: number | undefined;
+  if (hasVariants && product.variants) {
+    const prices = product.variants
+      .map(v => v.promoPrice && v.promoPrice > 0 ? v.promoPrice : v.price)
+      .filter(p => p > 0);
+    minPrice = prices.length > 0 ? Math.min(...prices) : undefined;
+  }
+  
   // If promoPrice exists, show it as the display price and cross out the regular price
   const hasPromo = product.promoPrice && product.promoPrice > 0;
-  const displayPrice = hasPromo && product.promoPrice ? product.promoPrice : product.price;
-  const regularPrice = product.price;
-  const discountPercentage = hasPromo && regularPrice > 0 && product.promoPrice
+  const displayPrice = hasVariants 
+    ? minPrice 
+    : (hasPromo && product.promoPrice ? product.promoPrice : product.price);
+  const regularPrice = hasVariants 
+    ? (product.variants?.find(v => v.promoPrice && v.promoPrice > 0)?.price || minPrice)
+    : product.price;
+  const discountPercentage = hasPromo && regularPrice && regularPrice > 0 && product.promoPrice
     ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
     : 0;
 
@@ -98,7 +114,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           )}
 
           {/* Stock Badge */}
-          {product.stock === 0 && (
+          {!hasVariants && product.stock !== undefined && product.stock === 0 && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <span className="bg-red-500 text-white font-bold px-4 py-2 rounded-lg">
+                {t('common.outOfStock')}
+              </span>
+            </div>
+          )}
+          {hasVariants && product.variants && product.variants.every(v => v.stock === 0) && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
               <span className="bg-red-500 text-white font-bold px-4 py-2 rounded-lg">
                 {t('common.outOfStock')}
@@ -107,7 +130,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           )}
 
           {/* Quick Add to Cart - Shows on hover */}
-          {product.stock > 0 && (
+          {((!hasVariants && product.stock !== undefined && product.stock > 0) || 
+           (hasVariants && product.variants && product.variants.some(v => v.stock > 0))) && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               whileHover={{ opacity: 1, y: 0 }}
@@ -159,19 +183,32 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-[#510013] dark:text-white">
-                  {displayPrice?.toFixed(2) || product.price.toFixed(2)} TND
-                </span>
-                {hasPromo && (
-                  <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                    {regularPrice.toFixed(2)} TND
+                {displayPrice !== undefined && displayPrice !== null ? (
+                  <>
+                    <span className="text-2xl font-bold text-[#510013] dark:text-white">
+                      {hasVariants ? `${t('product.from')} ` : ''}{displayPrice.toFixed(2)} TND
+                    </span>
+                    {hasPromo && regularPrice && regularPrice > 0 && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                        {regularPrice.toFixed(2)} TND
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                    {t('product.selectVariant')}
                   </span>
                 )}
               </div>
             </div>
-            {product.stock > 0 && product.stock < 10 && (
+            {!hasVariants && product.stock !== undefined && product.stock > 0 && product.stock < 10 && (
               <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
                 {tWithParams('cart.onlyLeft', { count: product.stock })}
+              </span>
+            )}
+            {hasVariants && (
+              <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                {product.variants?.length || 0} {t('product.variants')}
               </span>
             )}
           </div>

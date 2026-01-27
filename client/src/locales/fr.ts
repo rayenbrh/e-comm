@@ -93,6 +93,9 @@ export const fr = {
     description: 'Description',
     relatedProducts: 'Vous pourriez aussi aimer',
     selectQuantity: 'Quantité',
+    from: 'À partir de',
+    selectVariant: 'Sélectionner une variante',
+    variants: 'variantes',
   },
   // Home
   home: {

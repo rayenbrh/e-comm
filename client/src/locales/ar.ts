@@ -93,6 +93,9 @@ export const ar = {
     description: 'الوصف',
     relatedProducts: 'قد يعجبك أيضًا',
     selectQuantity: 'الكمية',
+    from: 'من',
+    selectVariant: 'اختر متغير',
+    variants: 'متغيرات',
   },
   // Home
   home: {
