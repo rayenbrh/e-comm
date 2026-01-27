@@ -682,8 +682,9 @@ const AddVariantAttributeForm = ({ onAdd }: { onAdd: (name: string, values: stri
   const [name, setName] = useState('');
   const [values, setValues] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!name.trim()) {
       toast.error('Attribute name is required');
       return;
@@ -698,8 +699,16 @@ const AddVariantAttributeForm = ({ onAdd }: { onAdd: (name: string, values: stri
     setValues('');
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAdd(e as any);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <div className="flex gap-2" onKeyDown={handleKeyPress}>
       <Input
         placeholder="Attribute name (e.g., Color)"
         value={name}
@@ -712,11 +721,11 @@ const AddVariantAttributeForm = ({ onAdd }: { onAdd: (name: string, values: stri
         onChange={(e) => setValues(e.target.value)}
         className="flex-1"
       />
-      <Button type="submit" size="sm">
+      <Button type="button" onClick={handleAdd} size="sm">
         <Plus className="w-4 h-4 mr-1" />
         Add
       </Button>
-    </form>
+    </div>
   );
 };
 
