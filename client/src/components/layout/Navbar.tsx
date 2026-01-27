@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, User, Menu, Sun, Moon, LogOut, Heart, Globe } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
@@ -7,19 +7,28 @@ import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 import { MobileMenu } from './MobileMenu';
+import toast from 'react-hot-toast';
 
 export const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const totalItems = useCartStore((state) => state.getTotalItems());
   const wishlistItems = useWishlistStore((state) => state.getTotalItems());
   const { isDark, toggleTheme } = useThemeStore();
   const { user, isAuthenticated } = useAuthStore();
   const { language, setLanguage } = useLanguageStore();
   const { t } = useTranslation();
+  const { logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
@@ -200,6 +209,16 @@ export const Navbar = () => {
                       <span className="text-sm font-medium">{user?.name}</span>
                     </motion.button>
                   </Link>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 transition text-red-600 dark:text-red-400"
+                    title={t('nav.logout')}
+                  >
+                    <LogOut size={18} />
+                    <span className="text-sm font-medium hidden lg:inline">{t('nav.logout')}</span>
+                  </motion.button>
                 </div>
               ) : (
                 <div className="hidden md:flex items-center gap-2">

@@ -80,11 +80,12 @@ export const Wishlist = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <AnimatePresence mode="popLayout">
             {items.map((product, index) => {
+              // If promoPrice exists, show it as the display price and cross out the regular price
               const hasPromo = product.promoPrice && product.promoPrice > 0;
               const displayPrice = hasPromo ? product.promoPrice : product.price;
-              const oldPrice = product.oldPrice || product.price;
-              const discountPercentage = hasPromo && oldPrice > 0 
-                ? Math.round(((oldPrice - (product.promoPrice || 0)) / oldPrice) * 100)
+              const regularPrice = product.price;
+              const discountPercentage = hasPromo && regularPrice > 0 
+                ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
                 : 0;
 
               return (

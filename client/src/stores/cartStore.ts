@@ -120,6 +120,7 @@ export const useCartStore = create<CartState>()(
       getTotalPrice: () => {
         return get().items.reduce((total, item) => {
           if (item.type === 'product' && item.product) {
+            // Use promoPrice if available, otherwise use regular price
             const price = item.product.promoPrice && item.product.promoPrice > 0 
               ? item.product.promoPrice 
               : item.product.price;

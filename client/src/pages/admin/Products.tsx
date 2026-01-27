@@ -24,7 +24,6 @@ export const AdminProducts = () => {
     name: '',
     description: '',
     price: '',
-    oldPrice: '',
     promoPrice: '',
     stock: '',
     category: '',
@@ -50,7 +49,6 @@ export const AdminProducts = () => {
         name: product.name,
         description: product.description,
         price: product.price.toString(),
-        oldPrice: product.oldPrice?.toString() || '',
         promoPrice: product.promoPrice?.toString() || '',
         stock: product.stock.toString(),
         category: product.category?._id || product.category || '',
@@ -67,7 +65,6 @@ export const AdminProducts = () => {
         name: '',
         description: '',
         price: '',
-        oldPrice: '',
         promoPrice: '',
         stock: '',
         category: '',
@@ -127,11 +124,15 @@ export const AdminProducts = () => {
   };
 
   const handleRemoveImage = (index: number) => {
-    const isNewImage = index >= (editingProduct?.images?.length || 0);
+    const existingImagesCount = editingProduct?.images?.length || 0;
+    const isNewImage = index >= existingImagesCount;
+    
     if (isNewImage) {
-      const adjustedIndex = index - (editingProduct?.images?.length || 0);
+      // Remove from selectedImages (new files)
+      const adjustedIndex = index - existingImagesCount;
       setSelectedImages(prev => prev.filter((_, i) => i !== adjustedIndex));
     }
+    // Remove from imagePreviews (both existing and new)
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -142,21 +143,26 @@ export const AdminProducts = () => {
     formDataToSend.append('name', formData.name);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('price', formData.price);
-    if (formData.oldPrice) formDataToSend.append('oldPrice', formData.oldPrice);
     if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
     formDataToSend.append('stock', formData.stock);
     formDataToSend.append('category', formData.category);
     formDataToSend.append('tags', formData.tags);
     formDataToSend.append('featured', formData.featured.toString());
 
-    // Add existing images if editing (keep images that are still in previews)
-    if (editingProduct && editingProduct.images && editingProduct.images.length > 0) {
-      const existingImages = imagePreviews.filter(preview => 
-        editingProduct.images.includes(preview)
-      );
-      if (existingImages.length > 0) {
-        formDataToSend.append('images', JSON.stringify(existingImages));
-      }
+    // Collect all final images: existing images that are still in previews + new uploaded images
+    if (editingProduct) {
+      // Filter existing images that are still in previews
+      // Existing images are URLs (not data URLs), and they must be in the original product images
+      const existingImagesInPreviews = imagePreviews.filter(preview => {
+        // Check if it's an existing image (URL, not data URL) and still in original images
+        const isExistingImage = !preview.startsWith('data:') && 
+                                editingProduct.images && 
+                                editingProduct.images.includes(preview);
+        return isExistingImage;
+      });
+      
+      // Send all final images (existing kept + new ones will be added by backend)
+      formDataToSend.append('images', JSON.stringify(existingImagesInPreviews));
     }
 
     // Add new uploaded images
@@ -251,6 +257,7 @@ export const AdminProducts = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Product</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">SKU</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Price</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Promo Price</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Stock</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Category</th>
                   <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
@@ -259,7 +266,7 @@ export const AdminProducts = () => {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center">
+                    <td colSpan={7} className="px-6 py-12 text-center">
                       <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500 dark:text-gray-400">No products found</p>
                     </td>
@@ -284,6 +291,15 @@ export const AdminProducts = () => {
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{product.sku}</td>
                       <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">{product.price.toFixed(2)} TND</td>
+                      <td className="px-6 py-4">
+                        {product.promoPrice && product.promoPrice > 0 ? (
+                          <span className="font-semibold text-green-600 dark:text-green-400">
+                            {product.promoPrice.toFixed(2)} TND
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -358,25 +374,6 @@ export const AdminProducts = () => {
                 required
               />
               <Input
-                label="Old Price (TND) - Optional"
-                type="number"
-                step="0.01"
-                name="oldPrice"
-                value={formData.oldPrice}
-                onChange={handleInputChange}
-                placeholder="Original price before discount"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Stock"
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleInputChange}
-                required
-              />
-              <Input
                 label="Promo Price (TND) - Optional"
                 type="number"
                 step="0.01"
@@ -386,6 +383,14 @@ export const AdminProducts = () => {
                 placeholder="Discounted price"
               />
             </div>
+            <Input
+              label="Stock"
+              type="number"
+              name="stock"
+              value={formData.stock}
+              onChange={handleInputChange}
+              required
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Category
@@ -442,16 +447,20 @@ export const AdminProducts = () => {
               {imagePreviews.length > 0 && (
                 <div className="grid grid-cols-3 gap-4">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group">
+                    <div key={index} className="relative group bg-gray-100 dark:bg-[#1E0007] rounded-lg overflow-hidden">
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
                         className="w-full h-32 object-cover rounded-lg border-2 border-gray-300 dark:border-burgundy-600"
+                        onError={(e) => {
+                          // Show placeholder if image fails to load
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect width="200" height="200" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3EImage not found%3C/text%3E%3C/svg%3E';
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                        className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 z-10"
                       >
                         <X className="w-4 h-4" />
                       </button>

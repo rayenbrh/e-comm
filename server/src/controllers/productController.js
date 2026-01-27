@@ -162,7 +162,7 @@ export const getProductById = async (req, res) => {
  */
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, oldPrice, promoPrice, category, images, stock, sku, tags, featured } = req.body;
+    const { name, description, price, promoPrice, category, images, stock, sku, tags, featured } = req.body;
 
     // Verify category exists
     const categoryExists = await Category.findById(category);
@@ -183,15 +183,16 @@ export const createProduct = async (req, res) => {
       imagePaths = imageArray;
     }
 
-    // Determine the actual price to use (promoPrice takes precedence, otherwise use price)
-    const finalPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : parseFloat(price);
+    // Price is the regular price, promoPrice is optional discounted price
+    const finalPrice = parseFloat(price);
+    const finalPromoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
 
     const product = await Product.create({
       name,
       description,
       price: finalPrice,
-      oldPrice: oldPrice && oldPrice > 0 ? parseFloat(oldPrice) : null,
-      promoPrice: promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null,
+      oldPrice: null, // Not used anymore
+      promoPrice: finalPromoPrice,
       category,
       images: imagePaths,
       stock,
@@ -223,7 +224,7 @@ export const createProduct = async (req, res) => {
  */
 export const updateProduct = async (req, res) => {
   try {
-    const { name, description, price, oldPrice, promoPrice, category, images, stock, sku, tags, featured, rating } = req.body;
+    const { name, description, price, promoPrice, category, images, stock, sku, tags, featured, rating } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -246,25 +247,43 @@ export const updateProduct = async (req, res) => {
     }
 
     // Handle uploaded images
+    // First, get the existing images to keep (sent from frontend)
+    let finalImages = [];
+    if (images !== undefined) {
+      // Parse images from JSON string or array
+      if (typeof images === 'string') {
+        try {
+          finalImages = JSON.parse(images);
+        } catch (e) {
+          // If not JSON, treat as comma-separated string
+          finalImages = images.split(',').map((url) => url.trim()).filter((url) => url);
+        }
+      } else if (Array.isArray(images)) {
+        finalImages = images;
+      }
+    }
+    
+    // Add new uploaded images to the final images array
     if (req.files && req.files.length > 0) {
       const newImagePaths = req.files.map(file => `/uploads/${file.filename}`);
-      // Merge with existing images or replace
-      product.images = [...(product.images || []), ...newImagePaths];
-    } else if (images !== undefined) {
-      // Support both uploaded files and URL strings
-      const imageArray = Array.isArray(images) ? images : images.split(',').map((url) => url.trim()).filter((url) => url);
-      product.images = imageArray;
+      finalImages = [...finalImages, ...newImagePaths];
+    }
+    
+    // Replace product images with final images array
+    if (images !== undefined || (req.files && req.files.length > 0)) {
+      product.images = finalImages;
     }
 
-    // Determine the actual price to use
-    const finalPrice = promoPrice && promoPrice > 0 ? promoPrice : (price !== undefined ? price : product.price);
+    // Price is the regular price, promoPrice is optional discounted price
+    const finalPrice = price !== undefined ? parseFloat(price) : product.price;
+    const finalPromoPrice = promoPrice !== undefined ? (promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null) : product.promoPrice;
 
     // Update fields
     if (name) product.name = name;
     if (description) product.description = description;
-    if (price !== undefined || promoPrice !== undefined) product.price = finalPrice;
-    if (oldPrice !== undefined) product.oldPrice = oldPrice && oldPrice > 0 ? parseFloat(oldPrice) : null;
-    if (promoPrice !== undefined) product.promoPrice = promoPrice && promoPrice > 0 ? parseFloat(promoPrice) : null;
+    if (price !== undefined) product.price = finalPrice;
+    if (promoPrice !== undefined) product.promoPrice = finalPromoPrice;
+    product.oldPrice = null; // Not used anymore
     if (category) product.category = category;
     if (stock !== undefined) product.stock = stock;
     if (sku) product.sku = sku;

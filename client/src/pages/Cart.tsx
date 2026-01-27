@@ -89,6 +89,7 @@ export const Cart = () => {
                 const itemImage = item.type === 'product' 
                   ? item.product?.images?.[0] 
                   : item.pack?.image || item.pack?.products?.[0]?.product?.images?.[0];
+                // Use promoPrice if available, otherwise use regular price
                 const itemPrice = item.type === 'product' 
                   ? (item.product?.promoPrice && item.product.promoPrice > 0 ? item.product.promoPrice : item.product?.price || 0)
                   : item.pack?.discountPrice || 0;

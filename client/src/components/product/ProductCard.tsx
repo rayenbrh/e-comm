@@ -38,12 +38,12 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
   const imageUrl = product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
   
-  // Calculate discount percentage
+  // If promoPrice exists, show it as the display price and cross out the regular price
   const hasPromo = product.promoPrice && product.promoPrice > 0;
   const displayPrice = hasPromo ? product.promoPrice : product.price;
-  const oldPrice = product.oldPrice || product.price;
-  const discountPercentage = hasPromo && oldPrice > 0 
-    ? Math.round(((oldPrice - (product.promoPrice || 0)) / oldPrice) * 100)
+  const regularPrice = product.price;
+  const discountPercentage = hasPromo && regularPrice > 0 
+    ? Math.round(((regularPrice - product.promoPrice) / regularPrice) * 100)
     : 0;
 
   return (
@@ -161,9 +161,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 <span className="text-2xl font-bold text-[#510013] dark:text-white">
                   {displayPrice.toFixed(2)} TND
                 </span>
-                {hasPromo && oldPrice > displayPrice && (
+                {hasPromo && (
                   <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                    {oldPrice.toFixed(2)} TND
+                    {regularPrice.toFixed(2)} TND
                   </span>
                 )}
               </div>
