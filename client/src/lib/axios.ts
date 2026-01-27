@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// URL par défaut pour la production
+const DEFAULT_API_URL = 'https://gouidex-backend.2bj94x.easypanel.host/api';
+
+// Utiliser VITE_API_URL si disponible (défini au moment du build), sinon utiliser l'URL par défaut
+const apiBaseURL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: apiBaseURL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
