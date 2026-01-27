@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ProductCard } from '@/components/product/ProductCard';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
+import type { ProductVariant } from '@/types';
 import {
   ShoppingCart,
   Heart,
