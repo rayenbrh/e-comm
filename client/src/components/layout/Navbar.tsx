@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ShoppingCart, User, Menu, Sun, Moon, LogOut, Heart, Globe, Gift } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingCart, User, Menu, Sun, Moon, LogOut, Heart, Globe, Gift, ChevronDown, ChevronRight } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -8,8 +8,10 @@ import { useAuthStore } from '@/stores/authStore';
 import { useLanguageStore } from '@/stores/languageStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
+import { useCategories } from '@/hooks/useCategories';
+import { useState, useRef, useEffect } from 'react';
 import { MobileMenu } from './MobileMenu';
+import type { Category } from '@/types';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -21,19 +23,62 @@ export const Navbar = () => {
   const { language, setLanguage } = useLanguageStore();
   const { t } = useTranslation();
   const { logout } = useAuth();
+  const { data: categoriesData } = useCategories(true); // Get categories with subcategories
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [categoriesMenuOpen, setCategoriesMenuOpen] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const categoriesMenuRef = useRef<HTMLDivElement>(null);
+  
+  const mainCategories = categoriesData?.filter((cat: Category) => !cat.parent && !cat.isSubCategory) || [];
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  // Close categories menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoriesMenuRef.current && !categoriesMenuRef.current.contains(event.target as Node)) {
+        setCategoriesMenuOpen(false);
+        setExpandedCategory(null);
+      }
+    };
+
+    if (categoriesMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [categoriesMenuOpen]);
+
+  const toggleCategoryExpand = (categoryId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    navigate(`/products?category=${categoryId}`);
+    setCategoriesMenuOpen(false);
+    setExpandedCategory(null);
+  };
+
+  const handleSubCategoryClick = (subCategoryId: string) => {
+    navigate(`/products?category=${subCategoryId}`);
+    setCategoriesMenuOpen(false);
+    setExpandedCategory(null);
+  };
+
   const navLinks = [
     { path: '/', label: t('nav.home') },
     { path: '/products', label: t('nav.products') },
     { path: '/packs', label: t('nav.packs'), icon: Gift },
-    { path: '/categories', label: t('nav.categories') },
     { path: '/about', label: t('nav.about') },
   ];
 
@@ -91,6 +136,115 @@ export const Navbar = () => {
                   </Link>
                 );
               })}
+              
+              {/* Categories Dropdown */}
+              <div className="relative" ref={categoriesMenuRef}>
+                <button
+                  onClick={() => setCategoriesMenuOpen(!categoriesMenuOpen)}
+                  className={`relative group flex items-center gap-2 text-base font-medium transition-colors ${
+                    isActive('/categories')
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400'
+                  }`}
+                >
+                  {t('nav.categories')}
+                  <ChevronDown 
+                    size={16} 
+                    className={`transition-transform ${categoriesMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                  {isActive('/categories') && (
+                    <motion.div
+                      layoutId="navbar-indicator-categories"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-yellow-600 dark:bg-yellow-400"
+                    />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {categoriesMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => {
+                          setCategoriesMenuOpen(false);
+                          setExpandedCategory(null);
+                        }}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full left-0 mt-2 bg-white dark:bg-[#3a0f17] rounded-lg shadow-lg border border-gray-200 dark:border-[#2d2838] overflow-hidden z-50 min-w-[250px] max-h-[500px] overflow-y-auto"
+                      >
+                        {mainCategories.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                            {t('common.loading')}...
+                          </div>
+                        ) : (
+                          mainCategories.map((category: Category) => {
+                            const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+                            const isExpanded = expandedCategory === category._id;
+
+                            return (
+                              <div key={category._id} className="border-b border-gray-200 dark:border-[#2d2838] last:border-b-0">
+                                <div className="flex items-center justify-between">
+                                  <button
+                                    onClick={() => {
+                                      if (hasSubcategories) {
+                                        toggleCategoryExpand(category._id);
+                                      } else {
+                                        handleCategoryClick(category._id);
+                                      }
+                                    }}
+                                    className="flex-1 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition text-sm font-medium text-gray-900 dark:text-white"
+                                  >
+                                    {category.name}
+                                  </button>
+                                  {hasSubcategories && (
+                                    <button
+                                      onClick={(e) => toggleCategoryExpand(category._id, e)}
+                                      className="px-3 py-3 hover:bg-gray-100 dark:hover:bg-burgundy-700 transition"
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronDown size={16} className="text-gray-500 dark:text-gray-400" />
+                                      ) : (
+                                        <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
+                                
+                                <AnimatePresence>
+                                  {isExpanded && hasSubcategories && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.2 }}
+                                      className="overflow-hidden bg-gray-50 dark:bg-[#1E0007]"
+                                    >
+                                      {category.subcategories?.map((subCategory: Category) => (
+                                        <button
+                                          key={subCategory._id}
+                                          onClick={() => handleSubCategoryClick(subCategory._id)}
+                                          className="w-full px-6 py-2 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                                        >
+                                          <ChevronRight size={14} className="text-gray-400" />
+                                          {subCategory.name}
+                                        </button>
+                                      ))}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })
+                        )}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Actions */}

@@ -1,10 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { X, Home, ShoppingBag, Grid, User, LogIn, UserPlus, LogOut, LayoutDashboard, Heart, ShoppingCart, Info, Gift } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { X, Home, ShoppingBag, Grid, User, LogIn, UserPlus, LogOut, LayoutDashboard, Heart, ShoppingCart, Info, Gift, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useCategories } from '@/hooks/useCategories';
+import { useState } from 'react';
+import type { Category } from '@/types';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -12,13 +15,32 @@ interface MobileMenuProps {
 }
 
 export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const wishlistItems = useWishlistStore((state) => state.getTotalItems());
   const cartItems = useCartStore((state) => state.getTotalItems());
   const { t } = useTranslation();
+  const { data: categoriesData } = useCategories(true);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+  const mainCategories = categoriesData?.filter((cat: Category) => !cat.parent && !cat.isSubCategory) || [];
 
   const handleLogout = () => {
     logout();
+    onClose();
+  };
+
+  const toggleCategoryExpand = (categoryId: string) => {
+    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    navigate(`/products?category=${categoryId}`);
+    onClose();
+  };
+
+  const handleSubCategoryClick = (subCategoryId: string) => {
+    navigate(`/products?category=${subCategoryId}`);
     onClose();
   };
 
@@ -26,7 +48,6 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
     { path: '/', label: t('nav.home'), icon: Home },
     { path: '/products', label: t('nav.products'), icon: ShoppingBag },
     { path: '/packs', label: t('nav.packs'), icon: Gift },
-    { path: '/categories', label: t('nav.categories'), icon: Grid },
     { path: '/about', label: t('nav.about'), icon: Info },
   ];
 
@@ -102,6 +123,70 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                     </Link>
                   );
                 })}
+
+                {/* Categories with Subcategories */}
+                <div className="border-t border-gray-200 dark:border-[#2d2838] pt-2">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                    {t('nav.categories')}
+                  </div>
+                  {mainCategories.map((category: Category) => {
+                    const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+                    const isExpanded = expandedCategory === category._id;
+
+                    return (
+                      <div key={category._id}>
+                        <button
+                          onClick={() => {
+                            if (hasSubcategories) {
+                              toggleCategoryExpand(category._id);
+                            } else {
+                              handleCategoryClick(category._id);
+                            }
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Grid size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" />
+                            <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                              {category.name}
+                            </span>
+                          </div>
+                          {hasSubcategories && (
+                            <motion.div
+                              animate={{ rotate: isExpanded ? 90 : 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <ChevronRight size={16} className="text-gray-400" />
+                            </motion.div>
+                          )}
+                        </button>
+                        
+                        <AnimatePresence>
+                          {isExpanded && hasSubcategories && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              {category.subcategories?.map((subCategory: Category) => (
+                                <button
+                                  key={subCategory._id}
+                                  onClick={() => handleSubCategoryClick(subCategory._id)}
+                                  className="w-full flex items-center gap-3 px-8 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-sm text-gray-600 dark:text-gray-400"
+                                >
+                                  <ChevronRight size={14} />
+                                  {subCategory.name}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {/* Wishlist */}
                 <Link
