@@ -6,7 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Loader } from '@/components/ui/Loader';
 import { useState } from 'react';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 
 export const Categories = () => {
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ export const Categories = () => {
                     <div className="relative h-64 overflow-hidden">
                       <motion.img
                         src={getImageUrl(category.image)}
-                        alt={useLocalizedText(category.name)}
+                        alt={getLocalizedText(category.name)}
                         className="w-full h-full object-cover cursor-pointer"
                         onClick={() => navigate(`/products?category=${category._id}`)}
                         whileHover={{ scale: 1.1 }}
@@ -104,7 +104,7 @@ export const Categories = () => {
                       {/* Category Name on Image */}
                       <div className="absolute bottom-0 left-0 right-0 p-6">
                         <h3 className="text-2xl font-bold text-white mb-1">
-                          {useLocalizedText(category.name)}
+                          {getLocalizedText(category.name)}
                         </h3>
                         {subcategories.length > 0 && (
                           <p className="text-sm text-white/80">

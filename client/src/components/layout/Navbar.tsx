@@ -12,7 +12,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useState, useRef, useEffect } from 'react';
 import { MobileMenu } from './MobileMenu';
 import type { Category } from '@/types';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 
 export const Navbar = () => {
   const location = useLocation();
@@ -199,7 +199,7 @@ export const Navbar = () => {
                                     }}
                                     className="flex-1 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition text-sm font-medium text-gray-900 dark:text-white"
                                   >
-                                    {useLocalizedText(category.name)}
+                                    {getLocalizedText(category.name)}
                                   </button>
                                   {hasSubcategories && (
                                     <button
@@ -231,7 +231,7 @@ export const Navbar = () => {
                                           className="w-full px-6 py-2 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"
                                         >
                                           <ChevronRight size={14} className="text-gray-400" />
-                                          {useLocalizedText(subCategory.name)}
+                                          {getLocalizedText(subCategory.name)}
                                         </button>
                                       ))}
                                     </motion.div>

@@ -8,7 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useCategories } from '@/hooks/useCategories';
 import { useState } from 'react';
 import type { Category } from '@/types';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -149,7 +149,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                           <div className="flex items-center gap-3">
                             <Grid size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" />
                             <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                              {useLocalizedText(category.name)}
+                              {getLocalizedText(category.name)}
                             </span>
                           </div>
                           {hasSubcategories && (
@@ -178,7 +178,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                                   className="w-full flex items-center gap-3 px-8 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-sm text-gray-600 dark:text-gray-400"
                                 >
                                   <ChevronRight size={14} />
-                                  {useLocalizedText(subCategory.name)}
+                                  {getLocalizedText(subCategory.name)}
                                 </button>
                               ))}
                             </motion.div>

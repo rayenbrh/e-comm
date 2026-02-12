@@ -5,7 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/Button';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 
 export const Cart = () => {
   const navigate = useNavigate();
@@ -89,8 +89,8 @@ export const Cart = () => {
                 const itemId = item.type === 'product' ? item.product?._id : item.pack?._id;
                 const itemNameRaw = item.type === 'product' ? item.product?.name : item.pack?.name;
                 const itemDescriptionRaw = item.type === 'product' ? item.product?.description : item.pack?.description;
-                const itemName = useLocalizedText(itemNameRaw);
-                const itemDescription = useLocalizedText(itemDescriptionRaw);
+                const itemName = getLocalizedText(itemNameRaw);
+                const itemDescription = getLocalizedText(itemDescriptionRaw);
                 const itemImage = item.type === 'product' 
                   ? (item.selectedVariant?.image ? getImageUrl(item.selectedVariant.image) : getImageUrl(item.product?.images?.[0]))
                   : getImageUrl(item.pack?.image) || getImageUrl(item.pack?.products?.[0]?.product?.images?.[0]);

@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 import type { ProductVariant, VariantAttribute } from '@/types';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -358,11 +358,11 @@ export const AdminProducts = () => {
                         <div className="flex items-center gap-3">
                           <img
                             src={getImageUrl(product.images?.[0])}
-                            alt={useLocalizedText(product.name)}
+                            alt={getLocalizedText(product.name)}
                             className="w-12 h-12 rounded-lg object-cover"
                           />
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">{useLocalizedText(product.name)}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{getLocalizedText(product.name)}</p>
                             {product.featured && (
                               <span className="text-xs text-indigo-600 dark:text-indigo-400">Featured</span>
                             )}

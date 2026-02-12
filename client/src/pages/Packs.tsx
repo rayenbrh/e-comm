@@ -4,7 +4,7 @@ import { usePacks } from '@/hooks/usePacks';
 import { Loader } from '@/components/ui/Loader';
 import { useTranslation } from '@/hooks/useTranslation';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 import { Gift, ArrowRight } from 'lucide-react';
 
 export const Packs = () => {
@@ -71,7 +71,7 @@ export const Packs = () => {
                     <div className="relative h-64 overflow-hidden">
                       <img
                         src={getImageUrl(pack.image)}
-                        alt={useLocalizedText(pack.name)}
+                        alt={getLocalizedText(pack.name)}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                       {pack.featured && (
@@ -88,10 +88,10 @@ export const Packs = () => {
                   )}
                   <div className="p-6 flex-1 flex flex-col">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition">
-                      {useLocalizedText(pack.name)}
+                      {getLocalizedText(pack.name)}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2 flex-1">
-                      {useLocalizedText(pack.description)}
+                      {getLocalizedText(pack.description)}
                     </p>
                     
                     <div className="mb-4">

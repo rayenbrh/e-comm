@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { CreditCard, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
 
 export const Checkout = () => {
   const navigate = useNavigate();
@@ -297,11 +297,11 @@ export const Checkout = () => {
                     <div key={item.product!._id} className="flex gap-4">
                       <img
                         src={getImageUrl(item.product!.images?.[0])}
-                        alt={useLocalizedText(item.product!.name)}
+                        alt={getLocalizedText(item.product!.name)}
                         className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-burgundy-700"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{useLocalizedText(item.product!.name)}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{getLocalizedText(item.product!.name)}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Qty: {item.quantity}</p>
                         <p className="text-sm font-semibold text-[#510013] dark:text-burgundy-500">
                           {(item.product!.price * item.quantity).toFixed(2)} TND
