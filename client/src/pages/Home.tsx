@@ -10,7 +10,8 @@ import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
+import { useLanguageStore } from '@/stores/languageStore';
 import { useCartStore } from '@/stores/cartStore';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
@@ -22,6 +23,10 @@ export const Home = () => {
   const { data: packs = [], isLoading: loadingPacks } = usePacks();
   const { addPackToCart } = useCartStore();
   const { t } = useTranslation();
+  
+  // Subscribe to language changes to trigger re-render when language changes
+  useLanguageStore((state) => state.language);
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Auto-rotate through hero images
@@ -324,7 +329,7 @@ export const Home = () => {
                       <div className="relative h-48 overflow-hidden">
                         <img
                           src={getImageUrl(pack.image)}
-                          alt={useLocalizedText(pack.name)}
+                          alt={getLocalizedText(pack.name)}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         />
                         {pack.featured && (
@@ -339,10 +344,10 @@ export const Home = () => {
                     )}
                     <div className="p-6">
                       <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                        {useLocalizedText(pack.name)}
+                        {getLocalizedText(pack.name)}
                       </h3>
                       <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                        {useLocalizedText(pack.description)}
+                        {getLocalizedText(pack.description)}
                       </p>
                       
                       <div className="mb-4">
