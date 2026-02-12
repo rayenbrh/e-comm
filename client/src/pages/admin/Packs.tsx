@@ -5,7 +5,8 @@ import { useProducts } from '@/hooks/useProducts';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText, getLocalizedText } from '@/utils/multilingual';
+import { getLocalizedText } from '@/utils/multilingual';
+import { useLanguageStore } from '@/stores/languageStore';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, X, Power, Upload } from 'lucide-react';
@@ -22,8 +23,9 @@ export const AdminPacks = () => {
   const toggleActive = useTogglePackActive();
   const { t } = useTranslation();
   
-  // Subscribe to language changes to trigger re-render
-  const language = useLanguageStore((state) => state.language);
+  // Subscribe to language changes to trigger re-render when language changes
+  // This ensures the component re-renders when language changes, even though we use getLocalizedText in the map
+  useLanguageStore((state) => state.language);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPack, setEditingPack] = useState<Pack | null>(null);
@@ -477,7 +479,7 @@ export const AdminPacks = () => {
                     
                     return (
                       <option key={product._id} value={product._id}>
-                        {useLocalizedText(product.name)} - {priceText}
+                        {getLocalizedText(product.name)} - {priceText}
                       </option>
                     );
                   })}
@@ -506,7 +508,7 @@ export const AdminPacks = () => {
                         className="flex items-center justify-between p-2 bg-gray-50 dark:bg-[#1E0007] rounded"
                       >
                         <span className="text-sm text-gray-900 dark:text-white">
-                          {useLocalizedText(product?.name)} x {item.quantity}
+                          {getLocalizedText(product?.name)} x {item.quantity}
                         </span>
                         <button
                           type="button"
