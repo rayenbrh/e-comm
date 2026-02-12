@@ -557,7 +557,7 @@ export const Profile = () => {
                   <div className="text-center pt-2">
                     <Link to="/orders">
                       <Button variant="outline" className="w-full">
-                        {t('orders.viewAllOrders', { count: orders.length })}
+                        {t('orders.viewAllOrders', orders.length)}
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Trash2, ShoppingCart, Heart, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { useLocalizedText, getLocalizedText } from '@/utils/multilingual';
 
 export const Wishlist = () => {
   const navigate = useNavigate();

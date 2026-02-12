@@ -231,7 +231,7 @@ export const Navbar = () => {
                                           className="w-full px-6 py-2 text-left hover:bg-gray-100 dark:hover:bg-burgundy-700 transition text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"
                                         >
                                           <ChevronRight size={14} className="text-gray-400" />
-                                          {subCategory.name}
+                                          {useLocalizedText(subCategory.name)}
                                         </button>
                                       ))}
                                     </motion.div>
