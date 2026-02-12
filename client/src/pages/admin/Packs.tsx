@@ -29,8 +29,10 @@ export const AdminPacks = () => {
   const products = productsData?.products || [];
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name_fr: '',
+    name_ar: '',
+    description_fr: '',
+    description_ar: '',
     products: [] as Array<{ product: string; quantity: number }>,
     originalPrice: '',
     discountPrice: '',
@@ -115,9 +117,15 @@ export const AdminPacks = () => {
   const handleOpenModal = (pack?: Pack) => {
     if (pack) {
       setEditingPack(pack);
+      // Extract multilingual values
+      const nameObj = typeof pack.name === 'object' ? pack.name : { fr: pack.name || '', ar: pack.name || '' };
+      const descObj = typeof pack.description === 'object' ? pack.description : { fr: pack.description || '', ar: pack.description || '' };
+      
       setFormData({
-        name: pack.name,
-        description: pack.description,
+        name_fr: nameObj.fr || '',
+        name_ar: nameObj.ar || '',
+        description_fr: descObj.fr || '',
+        description_ar: descObj.ar || '',
         products: pack.products.map((p) => ({ product: p.product._id, quantity: p.quantity })),
         originalPrice: pack.originalPrice.toString(),
         discountPrice: pack.discountPrice.toString(),
@@ -132,8 +140,10 @@ export const AdminPacks = () => {
     } else {
       setEditingPack(null);
       setFormData({
-        name: '',
-        description: '',
+        name_fr: '',
+        name_ar: '',
+        description_fr: '',
+        description_ar: '',
         products: [],
         originalPrice: '',
         discountPrice: '',
@@ -153,8 +163,10 @@ export const AdminPacks = () => {
     setIsModalOpen(false);
     setEditingPack(null);
     setFormData({
-      name: '',
-      description: '',
+      name_fr: '',
+      name_ar: '',
+      description_fr: '',
+      description_ar: '',
       products: [],
       originalPrice: '',
       discountPrice: '',
@@ -191,8 +203,12 @@ export const AdminPacks = () => {
     // Create FormData if image is selected, otherwise use regular object
     const formDataToSend = new FormData();
     
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('description', formData.description);
+    // Create multilingual objects
+    const nameObj = { fr: formData.name_fr, ar: formData.name_ar };
+    const descObj = { fr: formData.description_fr, ar: formData.description_ar };
+    
+    formDataToSend.append('name', JSON.stringify(nameObj));
+    formDataToSend.append('description', JSON.stringify(descObj));
     formDataToSend.append('products', JSON.stringify(formData.products));
     formDataToSend.append('originalPrice', formData.originalPrice);
     formDataToSend.append('discountPrice', formData.discountPrice);
@@ -237,9 +253,10 @@ export const AdminPacks = () => {
     }
   };
 
-  const filteredPacks = packs?.filter((pack) =>
-    pack.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredPacks = packs?.filter((pack) => {
+    const packName = typeof pack.name === 'string' ? pack.name : pack.name.fr || pack.name.ar || '';
+    return packName.toLowerCase().includes(searchTerm.toLowerCase());
+  }) || [];
 
   if (isLoading) {
     return (
@@ -293,12 +310,12 @@ export const AdminPacks = () => {
               {pack.image && (
                 <img
                   src={getImageUrl(pack.image)}
-                  alt={pack.name}
+                  alt={useLocalizedText(pack.name)}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
               )}
               <div className="flex items-start justify-between mb-2">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{pack.name}</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{useLocalizedText(pack.name)}</h3>
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
                     pack.active
@@ -309,7 +326,7 @@ export const AdminPacks = () => {
                   {pack.active ? t('adminPacks.active') : t('adminPacks.inactive')}
                 </span>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{pack.description}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{useLocalizedText(pack.description)}</p>
               
               <div className="mb-4">
                 <div className="flex items-center gap-2">
@@ -380,20 +397,42 @@ export const AdminPacks = () => {
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingPack ? t('adminPacks.editPack') : t('adminPacks.createPack')}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label={t('adminPacks.packName')}
-              name="name"
-              value={formData.name}
+              label={t('adminPacks.packNameFr')}
+              name="name_fr"
+              value={formData.name_fr}
+              onChange={handleInputChange}
+              required
+            />
+
+            <Input
+              label={t('adminPacks.packNameAr')}
+              name="name_ar"
+              value={formData.name_ar}
               onChange={handleInputChange}
               required
             />
 
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
-                {t('adminPacks.description')}
+                {t('adminPacks.descriptionFr')}
               </label>
               <textarea
-                name="description"
-                value={formData.description}
+                name="description_fr"
+                value={formData.description_fr}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                {t('adminPacks.descriptionAr')}
+              </label>
+              <textarea
+                name="description_ar"
+                value={formData.description_ar}
                 onChange={handleInputChange}
                 rows={3}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-[#3a0f17] text-gray-900 dark:text-white"

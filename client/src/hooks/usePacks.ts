@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import type { MultilingualText } from '@/types';
 
 export interface PackProduct {
   product: {
@@ -15,8 +16,8 @@ export interface PackProduct {
 
 export interface Pack {
   _id: string;
-  name: string;
-  description: string;
+  name: string | MultilingualText;
+  description: string | MultilingualText;
   products: PackProduct[];
   originalPrice: number;
   discountPrice: number;

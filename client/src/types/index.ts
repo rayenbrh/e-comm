@@ -73,8 +73,8 @@ export interface CartItem {
   selectedVariant?: ProductVariant; // Selected variant if product has variants
   pack?: {
     _id: string;
-    name: string;
-    description: string;
+    name: string | MultilingualText;
+    description: string | MultilingualText;
     image?: string;
     discountPrice: number;
     originalPrice: number;

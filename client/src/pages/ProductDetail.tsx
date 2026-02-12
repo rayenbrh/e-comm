@@ -38,9 +38,10 @@ export const ProductDetail = () => {
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
 
+  // Always call hooks unconditionally - before any early returns
+  const productName = useLocalizedText(product?.name);
+  const productDescription = useLocalizedText(product?.description);
   const inWishlist = product ? isInWishlist(product._id) : false;
-  const productName = product ? useLocalizedText(product.name) : '';
-  const productDescription = product ? useLocalizedText(product.description) : '';
 
   if (!id) {
     return (

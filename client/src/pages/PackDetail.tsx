@@ -8,6 +8,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Badge } from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLocalizedText } from '@/utils/multilingual';
 import getImageUrl from '@/utils/imageUtils';
 import {
   ShoppingCart,
@@ -61,7 +62,7 @@ export const PackDetail = () => {
 
   const handleAddToCart = () => {
     addPackToCart(pack, quantity);
-    toast.success(tWithParams('packDetail.addedToCart', { quantity: quantity, name: pack.name }));
+    toast.success(tWithParams('packDetail.addedToCart', { quantity: quantity, name: useLocalizedText(pack.name) }));
   };
 
   const handleQuantityChange = (delta: number) => {
@@ -92,7 +93,7 @@ export const PackDetail = () => {
           <span className="text-gray-400">/</span>
           <span className="text-gray-900 dark:text-white">{t('packDetail.packs')}</span>
           <span className="text-gray-400">/</span>
-          <span className="text-gray-900 dark:text-white">{pack.name}</span>
+          <span className="text-gray-900 dark:text-white">{useLocalizedText(pack.name)}</span>
         </motion.nav>
 
         {/* Pack Details */}
@@ -107,7 +108,7 @@ export const PackDetail = () => {
             <div className="relative aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#3a0f17]">
               <motion.img
                 src={images[0] || ''}
-                alt={pack.name}
+                alt={useLocalizedText(pack.name)}
                 className="w-full h-full object-cover"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -129,10 +130,10 @@ export const PackDetail = () => {
             transition={{ duration: 0.5 }}
             className="flex flex-col"
           >
-            <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{pack.name}</h1>
+            <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{useLocalizedText(pack.name)}</h1>
 
             {/* Description */}
-            <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">{pack.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">{useLocalizedText(pack.description)}</p>
 
             {/* Price */}
             <div className="mb-6">
