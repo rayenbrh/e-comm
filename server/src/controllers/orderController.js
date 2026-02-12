@@ -12,17 +12,32 @@ export const createOrder = async (req, res) => {
     const user = req.user ? req.user._id : null;
 
     // Validate guest info if user is not logged in
-    if (!user && (!guestInfo || !guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Guest information is required when not logged in',
-        errors: [
-          { field: 'guestInfo.name', message: 'Name is required' },
-          { field: 'guestInfo.email', message: 'Email is required' },
-          { field: 'guestInfo.phone', message: 'Phone is required' },
-          { field: 'guestInfo.address', message: 'Address is required' },
-        ],
-      });
+    if (!user) {
+      if (!guestInfo) {
+        return res.status(400).json({
+          success: false,
+          message: 'Guest information is required when not logged in',
+        });
+      }
+      if (!guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address) {
+        return res.status(400).json({
+          success: false,
+          message: 'Guest information is incomplete',
+          errors: [
+            ...(!guestInfo.name ? [{ field: 'guestInfo.name', message: 'Name is required' }] : []),
+            ...(!guestInfo.email ? [{ field: 'guestInfo.email', message: 'Email is required' }] : []),
+            ...(!guestInfo.phone ? [{ field: 'guestInfo.phone', message: 'Phone is required' }] : []),
+            ...(!guestInfo.address ? [{ field: 'guestInfo.address', message: 'Address is required' }] : []),
+          ],
+        });
+      }
+      // Validate address fields
+      if (!guestInfo.address.street || !guestInfo.address.city || !guestInfo.address.postalCode || !guestInfo.address.country) {
+        return res.status(400).json({
+          success: false,
+          message: 'Address information is incomplete',
+        });
+      }
     }
 
     // Validate items and calculate totals
@@ -47,7 +62,7 @@ export const createOrder = async (req, res) => {
 
       if (product.hasVariants && product.variants && product.variants.length > 0) {
         // Products with variants require variant selection
-        if (!item.variantAttributes || Object.keys(item.variantAttributes).length === 0) {
+        if (!item.variantAttributes || typeof item.variantAttributes !== 'object' || Object.keys(item.variantAttributes).length === 0) {
           return res.status(400).json({
             success: false,
             message: `Variant selection is required for product: ${itemName}`,
@@ -59,10 +74,16 @@ export const createOrder = async (req, res) => {
           if (!variant.attributes) return false;
           const variantAttrs = variant.attributes instanceof Map 
             ? Object.fromEntries(variant.attributes) 
-            : variant.attributes;
-          return Object.keys(item.variantAttributes).every(
-            key => variantAttrs[key] === item.variantAttributes[key]
-          ) && Object.keys(variantAttrs).length === Object.keys(item.variantAttributes).length;
+            : (variant.attributes || {});
+          const itemAttrs = item.variantAttributes || {};
+          
+          // Check if all keys match
+          const variantKeys = Object.keys(variantAttrs);
+          const itemKeys = Object.keys(itemAttrs);
+          
+          if (variantKeys.length !== itemKeys.length) return false;
+          
+          return variantKeys.every(key => variantAttrs[key] === itemAttrs[key]);
         });
 
         if (!selectedVariant) {
@@ -101,9 +122,12 @@ export const createOrder = async (req, res) => {
       const itemTotal = itemPrice * item.quantity;
       subtotal += itemTotal;
 
+      // Ensure name is a string (handle multilingual)
+      const orderItemName = typeof itemName === 'string' ? itemName : String(itemName);
+      
       orderItems.push({
         product: product._id,
-        name: itemName,
+        name: orderItemName,
         quantity: item.quantity,
         price: itemPrice,
         image: product.images && product.images.length > 0 ? product.images[0] : '',
@@ -113,17 +137,24 @@ export const createOrder = async (req, res) => {
       if (product.hasVariants && selectedVariant) {
         // Update variant stock
         const variantIndex = product.variants.findIndex(v => {
+          if (!v.attributes) return false;
           const variantAttrs = v.attributes instanceof Map 
             ? Object.fromEntries(v.attributes) 
-            : v.attributes;
+            : (v.attributes || {});
           const itemAttrs = item.variantAttributes || {};
-          return Object.keys(variantAttrs).every(
-            key => variantAttrs[key] === itemAttrs[key]
-          ) && Object.keys(variantAttrs).length === Object.keys(itemAttrs).length;
+          
+          const variantKeys = Object.keys(variantAttrs);
+          const itemKeys = Object.keys(itemAttrs);
+          
+          if (variantKeys.length !== itemKeys.length) return false;
+          
+          return variantKeys.every(key => variantAttrs[key] === itemAttrs[key]);
         });
         
         if (variantIndex !== -1) {
           product.variants[variantIndex].stock -= item.quantity;
+          // Mark variants array as modified for Mongoose
+          product.markModified('variants');
         }
       } else {
         // Update product stock
@@ -162,9 +193,13 @@ export const createOrder = async (req, res) => {
     });
   } catch (error) {
     console.error('Create order error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Request body:', JSON.stringify(req.body, null, 2));
     res.status(500).json({
       success: false,
       message: 'Error creating order',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
