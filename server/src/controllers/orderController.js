@@ -11,6 +11,20 @@ export const createOrder = async (req, res) => {
     const { items, guestInfo, notes } = req.body;
     const user = req.user ? req.user._id : null;
 
+    // Validate guest info if user is not logged in
+    if (!user && (!guestInfo || !guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Guest information is required when not logged in',
+        errors: [
+          { field: 'guestInfo.name', message: 'Name is required' },
+          { field: 'guestInfo.email', message: 'Email is required' },
+          { field: 'guestInfo.phone', message: 'Phone is required' },
+          { field: 'guestInfo.address', message: 'Address is required' },
+        ],
+      });
+    }
+
     // Validate items and calculate totals
     let subtotal = 0;
     const orderItems = [];
@@ -25,26 +39,97 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      if (product.stock < item.quantity) {
+      // Handle products with variants
+      let selectedVariant = null;
+      let itemPrice = 0;
+      let itemStock = 0;
+      let itemName = typeof product.name === 'string' ? product.name : (product.name?.fr || product.name?.ar || 'Product');
+
+      if (product.hasVariants && product.variants && product.variants.length > 0) {
+        // Products with variants require variant selection
+        if (!item.variantAttributes || Object.keys(item.variantAttributes).length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Variant selection is required for product: ${itemName}`,
+          });
+        }
+
+        // Find matching variant by attributes
+        selectedVariant = product.variants.find(variant => {
+          if (!variant.attributes) return false;
+          const variantAttrs = variant.attributes instanceof Map 
+            ? Object.fromEntries(variant.attributes) 
+            : variant.attributes;
+          return Object.keys(item.variantAttributes).every(
+            key => variantAttrs[key] === item.variantAttributes[key]
+          ) && Object.keys(variantAttrs).length === Object.keys(item.variantAttributes).length;
+        });
+
+        if (!selectedVariant) {
+          return res.status(400).json({
+            success: false,
+            message: `Variant not found for product: ${itemName}`,
+          });
+        }
+
+        itemPrice = selectedVariant.promoPrice && selectedVariant.promoPrice > 0 
+          ? selectedVariant.promoPrice 
+          : selectedVariant.price;
+        itemStock = selectedVariant.stock;
+      } else {
+        // Products without variants - use product price and stock
+        if (product.price === undefined || product.price === null) {
+          return res.status(400).json({
+            success: false,
+            message: `Product ${itemName} does not have a price`,
+          });
+        }
+        itemPrice = product.promoPrice && product.promoPrice > 0 
+          ? product.promoPrice 
+          : product.price;
+        itemStock = product.stock || 0;
+      }
+
+      // Check stock
+      if (itemStock < item.quantity) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient stock for ${product.name}. Available: ${product.stock}`,
+          message: `Insufficient stock for ${itemName}. Available: ${itemStock}`,
         });
       }
 
-      const itemTotal = product.price * item.quantity;
+      const itemTotal = itemPrice * item.quantity;
       subtotal += itemTotal;
 
       orderItems.push({
         product: product._id,
-        name: product.name,
+        name: itemName,
         quantity: item.quantity,
-        price: product.price,
+        price: itemPrice,
         image: product.images && product.images.length > 0 ? product.images[0] : '',
       });
 
       // Reduce stock
-      product.stock -= item.quantity;
+      if (product.hasVariants && selectedVariant) {
+        // Update variant stock
+        const variantIndex = product.variants.findIndex(v => {
+          const variantAttrs = v.attributes instanceof Map 
+            ? Object.fromEntries(v.attributes) 
+            : v.attributes;
+          const itemAttrs = item.variantAttributes || {};
+          return Object.keys(variantAttrs).every(
+            key => variantAttrs[key] === itemAttrs[key]
+          ) && Object.keys(variantAttrs).length === Object.keys(itemAttrs).length;
+        });
+        
+        if (variantIndex !== -1) {
+          product.variants[variantIndex].stock -= item.quantity;
+        }
+      } else {
+        // Update product stock
+        product.stock -= item.quantity;
+      }
+      
       await product.save();
     }
 

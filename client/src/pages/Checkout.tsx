@@ -50,28 +50,46 @@ export const Checkout = () => {
     setIsProcessing(true);
 
     try {
+      // Prepare order data - backend expects only product ID and quantity
+      const orderItems = items
+        .filter(item => item.type === 'product' && item.product)
+        .map((item) => {
+          const orderItem: any = {
+            product: item.product!._id,
+            quantity: item.quantity,
+          };
+          
+          // Include variant info if product has variants and a variant is selected
+          if (item.product!.hasVariants && item.selectedVariant && item.selectedVariant.attributes) {
+            // Convert Map to object if needed
+            const variantAttrs = item.selectedVariant.attributes instanceof Map
+              ? Object.fromEntries(item.selectedVariant.attributes)
+              : item.selectedVariant.attributes;
+            orderItem.variantAttributes = variantAttrs;
+          }
+          
+          return orderItem;
+        });
+
       // Prepare order data
-      const orderData = {
-        items: items.filter(item => item.product).map((item) => ({
-          product: item.product!._id,
-          name: item.product!.name,
-          quantity: item.quantity,
-          price: item.product!.price,
-          image: item.product!.images?.[0] || '',
-        })),
-        subtotal: total,
-        shippingCost: total >= 150 ? 0 : 25,
-        total: total + (total >= 150 ? 0 : 25),
-        shippingAddress: {
+      const orderData: any = {
+        items: orderItems,
+      };
+
+      // Add guest info if user is not logged in
+      if (!user) {
+        orderData.guestInfo = {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          street: formData.street,
-          city: formData.city,
-          postalCode: formData.postalCode,
-          country: formData.country,
-        },
-      };
+          address: {
+            street: formData.street,
+            city: formData.city,
+            postalCode: formData.postalCode,
+            country: formData.country,
+          },
+        };
+      }
 
       await createOrder.mutateAsync(orderData);
 

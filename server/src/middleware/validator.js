@@ -96,13 +96,15 @@ export const createOrderValidation = [
   body('items').isArray({ min: 1 }).withMessage('Order must have at least one item'),
   body('items.*.product').notEmpty().withMessage('Product ID is required'),
   body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
-  body('guestInfo.name').if(body('user').not().exists()).notEmpty().withMessage('Name is required'),
-  body('guestInfo.email').if(body('user').not().exists()).isEmail().withMessage('Valid email is required'),
-  body('guestInfo.phone').if(body('user').not().exists()).notEmpty().withMessage('Phone is required'),
-  body('guestInfo.address.street').if(body('user').not().exists()).notEmpty().withMessage('Street is required'),
-  body('guestInfo.address.city').if(body('user').not().exists()).notEmpty().withMessage('City is required'),
-  body('guestInfo.address.postalCode').if(body('user').not().exists()).notEmpty().withMessage('Postal code is required'),
-  body('guestInfo.address.country').if(body('user').not().exists()).notEmpty().withMessage('Country is required'),
+  body('items.*.variantAttributes').optional().isObject().withMessage('Variant attributes must be an object'),
+  // Guest info validation is handled in the controller after auth middleware
+  body('guestInfo.name').optional().notEmpty().withMessage('Name is required for guest orders'),
+  body('guestInfo.email').optional().isEmail().withMessage('Valid email is required for guest orders'),
+  body('guestInfo.phone').optional().notEmpty().withMessage('Phone is required for guest orders'),
+  body('guestInfo.address.street').optional().notEmpty().withMessage('Street is required for guest orders'),
+  body('guestInfo.address.city').optional().notEmpty().withMessage('City is required for guest orders'),
+  body('guestInfo.address.postalCode').optional().notEmpty().withMessage('Postal code is required for guest orders'),
+  body('guestInfo.address.country').optional().notEmpty().withMessage('Country is required for guest orders'),
 ];
 
 /**

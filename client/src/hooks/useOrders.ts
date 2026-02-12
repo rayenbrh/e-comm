@@ -7,6 +7,7 @@ interface CreateOrderData {
   items: {
     product: string;
     quantity: number;
+    variantAttributes?: Record<string, string>;
   }[];
   guestInfo?: {
     name: string;
@@ -50,8 +51,14 @@ export const useCreateOrder = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success('Order placed successfully!');
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create order';
+      const errors = error?.response?.data?.errors;
+      if (errors && Array.isArray(errors)) {
+        toast.error(`${errorMessage}: ${errors.map((e: any) => e.message).join(', ')}`);
+      } else {
+        toast.error(errorMessage);
+      }
     },
   });
 };
