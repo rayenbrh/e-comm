@@ -148,7 +148,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
                           <div className="flex items-center gap-3">
                             <Grid size={20} className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" />
                             <span className="font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                              {category.name}
+                              {useLocalizedText(category.name)}
                             </span>
                           </div>
                           {hasSubcategories && (

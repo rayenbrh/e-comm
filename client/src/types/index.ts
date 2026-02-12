@@ -16,7 +16,7 @@ export interface Address {
 
 export interface Category {
   _id: string;
-  name: string;
+  name: string | MultilingualText;
   slug: string;
   description: string;
   image?: string;

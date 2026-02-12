@@ -177,7 +177,7 @@ export const Wishlist = () => {
                     </Link>
 
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      {product.category.name}
+                      {getLocalizedText(product.category.name)}
                     </p>
 
                     {/* Price */}

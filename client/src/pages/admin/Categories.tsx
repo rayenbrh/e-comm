@@ -10,10 +10,14 @@ import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { useQueryClient } from '@tanstack/react-query';
 import getImageUrl from '@/utils/imageUtils';
+import { getLocalizedText } from '@/utils/multilingual';
+import { useLanguageStore } from '@/stores/languageStore';
 
 export const AdminCategories = () => {
   const { data: categories, isLoading } = useCategories(true); // Get categories with subcategories
   const queryClient = useQueryClient();
+  // Subscribe to language changes to trigger re-render
+  useLanguageStore((state) => state.language);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -21,7 +25,8 @@ export const AdminCategories = () => {
   const [selectedParentCategory, setSelectedParentCategory] = useState<any>(null);
 
   const [formData, setFormData] = useState({
-    name: '',
+    name_fr: '',
+    name_ar: '',
     description: '',
     image: '',
     parent: '',
@@ -41,7 +46,8 @@ export const AdminCategories = () => {
       setSelectedParentCategory(parentCategory);
       setEditingCategory(null);
       setFormData({
-        name: '',
+        name_fr: '',
+        name_ar: '',
         description: '',
         image: '',
         parent: parentCategory._id,
@@ -51,8 +57,13 @@ export const AdminCategories = () => {
       setIsSubCategoryModalOpen(true);
     } else if (category) {
       setEditingCategory(category);
+      // Handle multilingual name
+      const categoryName = typeof category.name === 'string' 
+        ? { fr: category.name, ar: category.name }
+        : category.name;
       setFormData({
-        name: category.name,
+        name_fr: categoryName?.fr || '',
+        name_ar: categoryName?.ar || '',
         description: category.description || '',
         image: category.image || '',
         parent: category.parent || '',
@@ -64,7 +75,8 @@ export const AdminCategories = () => {
       setEditingCategory(null);
       setSelectedParentCategory(null);
       setFormData({
-        name: '',
+        name_fr: '',
+        name_ar: '',
         description: '',
         image: '',
         parent: '',
@@ -81,7 +93,8 @@ export const AdminCategories = () => {
     setEditingCategory(null);
     setSelectedParentCategory(null);
     setFormData({
-      name: '',
+      name_fr: '',
+      name_ar: '',
       description: '',
       image: '',
       parent: '',
@@ -120,7 +133,12 @@ export const AdminCategories = () => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
+      // Send multilingual name as JSON string
+      const nameObj = {
+        fr: formData.name_fr,
+        ar: formData.name_ar,
+      };
+      formDataToSend.append('name', JSON.stringify(nameObj));
       formDataToSend.append('description', formData.description);
       
       // Add parent if selected
@@ -228,12 +246,12 @@ export const AdminCategories = () => {
                 <div className="aspect-video bg-gray-100 dark:bg-burgundy-700 overflow-hidden">
                   <img
                     src={getImageUrl(category.image)}
-                    alt={category.name}
+                    alt={getLocalizedText(category.name)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{category.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{getLocalizedText(category.name)}</h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                     {category.description || 'No description'}
                   </p>
@@ -290,7 +308,7 @@ export const AdminCategories = () => {
                   <option value="">None (Main Category)</option>
                   {mainCategories.map((cat: any) => (
                     <option key={cat._id} value={cat._id}>
-                      {cat.name}
+                      {getLocalizedText(cat.name)}
                     </option>
                   ))}
                 </select>
@@ -300,17 +318,26 @@ export const AdminCategories = () => {
             {isSubCategoryModalOpen && (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                  Creating subcategory under: <strong>{selectedParentCategory?.name}</strong>
+                  Creating subcategory under: <strong>{getLocalizedText(selectedParentCategory?.name)}</strong>
                 </p>
               </div>
             )}
 
             <Input
-              label="Category Name"
-              name="name"
-              value={formData.name}
+              label="Nom de la catégorie (Français)"
+              name="name_fr"
+              value={formData.name_fr}
               onChange={handleInputChange}
               required
+              placeholder="Ex: Électronique"
+            />
+            <Input
+              label="Nom de la catégorie (Arabe)"
+              name="name_ar"
+              value={formData.name_ar}
+              onChange={handleInputChange}
+              required
+              placeholder="مثال: إلكترونيات"
             />
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

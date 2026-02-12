@@ -91,7 +91,16 @@ export const getCategoryById = async (req, res) => {
  */
 export const createCategory = async (req, res) => {
   try {
-    const { name, description, image, parent } = req.body;
+    let { name, description, image, parent } = req.body;
+
+    // Parse multilingual name if it's a JSON string
+    if (typeof name === 'string' && name.startsWith('{')) {
+      try {
+        name = JSON.parse(name);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
 
     // Handle uploaded image
     let imagePath = '';
@@ -143,7 +152,16 @@ export const createCategory = async (req, res) => {
  */
 export const updateCategory = async (req, res) => {
   try {
-    const { name, description, image, parent } = req.body;
+    let { name, description, image, parent } = req.body;
+
+    // Parse multilingual name if it's a JSON string
+    if (typeof name === 'string' && name.startsWith('{')) {
+      try {
+        name = JSON.parse(name);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
 
     const category = await Category.findById(req.params.id);
 

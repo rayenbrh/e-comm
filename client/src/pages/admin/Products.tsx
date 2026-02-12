@@ -213,9 +213,9 @@ export const AdminProducts = () => {
       if (formData.stock) formDataToSend.append('stock', formData.stock);
     } else {
       // Product without variants
-      formDataToSend.append('price', formData.price);
-      if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
-      formDataToSend.append('stock', formData.stock);
+    formDataToSend.append('price', formData.price);
+    if (formData.promoPrice) formDataToSend.append('promoPrice', formData.promoPrice);
+    formDataToSend.append('stock', formData.stock);
     }
 
     if (formData.sku) formDataToSend.append('sku', formData.sku);
@@ -406,17 +406,17 @@ export const AdminProducts = () => {
                             {product.variants?.reduce((sum: number, v: ProductVariant) => sum + (v.stock || 0), 0) || 0}
                           </span>
                         ) : (
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              product.stock === 0
-                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            product.stock === 0
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                                 : product.stock !== undefined && product.stock < 10
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                            }`}
-                          >
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          }`}
+                        >
                             {product.stock !== undefined ? product.stock : '-'}
-                          </span>
+                        </span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
@@ -454,11 +454,11 @@ export const AdminProducts = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Product Name (Français) <span className="text-red-500">*</span>
               </label>
-              <Input
+            <Input
                 name="nameFr"
                 value={formData.nameFr}
-                onChange={handleInputChange}
-                required
+              onChange={handleInputChange}
+              required
                 placeholder="Nom du produit en français"
               />
             </div>

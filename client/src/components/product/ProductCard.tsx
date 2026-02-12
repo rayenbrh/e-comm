@@ -7,7 +7,7 @@ import { useWishlistStore } from '@/stores/wishlistStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { useLocalizedText, getLocalizedText } from '@/utils/multilingual';
 
 interface ProductCardProps {
   product: Product;
@@ -151,7 +151,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         <div className="p-4 flex-1 flex flex-col">
           {/* Category */}
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-            {product.category.name}
+            {getLocalizedText(product.category.name)}
           </p>
 
           {/* Title */}

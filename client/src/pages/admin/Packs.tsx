@@ -337,18 +337,18 @@ export const AdminPacks = () => {
                 <div className="flex items-center gap-2">
                   {pack.discountPrice !== undefined && pack.discountPrice !== null ? (
                     <>
-                      <span className="text-2xl font-bold text-[#510013] dark:text-white">
-                        {pack.discountPrice.toFixed(2)} TND
-                      </span>
+                  <span className="text-2xl font-bold text-[#510013] dark:text-white">
+                    {pack.discountPrice.toFixed(2)} TND
+                  </span>
                       {pack.originalPrice !== undefined && pack.originalPrice !== null && (
-                        <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                          {pack.originalPrice.toFixed(2)} TND
-                        </span>
+                  <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+                    {pack.originalPrice.toFixed(2)} TND
+                  </span>
                       )}
                       {pack.discountPercentage !== undefined && pack.discountPercentage !== null && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                          -{pack.discountPercentage}%
-                        </span>
+                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    -{pack.discountPercentage}%
+                  </span>
                       )}
                     </>
                   ) : (
@@ -478,9 +478,9 @@ export const AdminPacks = () => {
                       : t('product.selectVariant');
                     
                     return (
-                      <option key={product._id} value={product._id}>
+                    <option key={product._id} value={product._id}>
                         {getLocalizedText(product.name)} - {priceText}
-                      </option>
+                    </option>
                     );
                   })}
                 </select>
