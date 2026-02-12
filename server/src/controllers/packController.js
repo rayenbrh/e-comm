@@ -84,7 +84,7 @@ export const getAllPacks = asyncHandler(async (req, res) => {
  * @access  Private/Admin
  */
 export const createPack = asyncHandler(async (req, res) => {
-  const {
+  let {
     name,
     description,
     products,
@@ -95,6 +95,22 @@ export const createPack = asyncHandler(async (req, res) => {
     endDate,
     featured,
   } = req.body;
+
+  // Parse multilingual name and description if they are JSON strings
+  if (typeof name === 'string' && name.startsWith('{')) {
+    try {
+      name = JSON.parse(name);
+    } catch (e) {
+      // If parsing fails, keep as string (backward compatibility)
+    }
+  }
+  if (typeof description === 'string' && description.startsWith('{')) {
+    try {
+      description = JSON.parse(description);
+    } catch (e) {
+      // If parsing fails, keep as string (backward compatibility)
+    }
+  }
 
   // Get image path if file was uploaded
   let imagePath = null;
@@ -228,9 +244,30 @@ export const updatePack = asyncHandler(async (req, res) => {
     pack.products = productsArray;
   }
 
-  // Update other fields
-  if (req.body.name) pack.name = req.body.name;
-  if (req.body.description) pack.description = req.body.description;
+  // Parse multilingual name and description if they are JSON strings
+  if (req.body.name !== undefined) {
+    let name = req.body.name;
+    if (typeof name === 'string' && name.startsWith('{')) {
+      try {
+        name = JSON.parse(name);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
+    pack.name = name;
+  }
+  
+  if (req.body.description !== undefined) {
+    let description = req.body.description;
+    if (typeof description === 'string' && description.startsWith('{')) {
+      try {
+        description = JSON.parse(description);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
+    pack.description = description;
+  }
   if (req.body.originalPrice) pack.originalPrice = parseFloat(req.body.originalPrice);
   if (req.body.discountPrice) pack.discountPrice = parseFloat(req.body.discountPrice);
   if (req.body.discountPercentage) pack.discountPercentage = parseFloat(req.body.discountPercentage);

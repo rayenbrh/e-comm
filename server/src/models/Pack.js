@@ -2,13 +2,34 @@ import mongoose from 'mongoose';
 
 const packSchema = new mongoose.Schema({
   name: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: [true, 'Pack name is required'],
-    trim: true,
+    validate: {
+      validator: function(v) {
+        // Allow both old string format (backward compatibility) and new multilingual format
+        if (typeof v === 'string') return true;
+        if (typeof v === 'object' && v !== null) {
+          return (v.fr && typeof v.fr === 'string') || (v.ar && typeof v.ar === 'string');
+        }
+        return false;
+      },
+      message: 'Pack name must be a string or an object with fr and/or ar properties'
+    }
   },
   description: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: [true, 'Pack description is required'],
+    validate: {
+      validator: function(v) {
+        // Allow both old string format (backward compatibility) and new multilingual format
+        if (typeof v === 'string') return true;
+        if (typeof v === 'object' && v !== null) {
+          return (v.fr && typeof v.fr === 'string') || (v.ar && typeof v.ar === 'string');
+        }
+        return false;
+      },
+      message: 'Pack description must be a string or an object with fr and/or ar properties'
+    }
   },
   products: [{
     product: {

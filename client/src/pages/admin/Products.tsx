@@ -268,9 +268,13 @@ export const AdminProducts = () => {
     }
   };
 
-  const filteredProducts = products.filter((product: any) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter((product: any) => {
+    // Handle multilingual product names
+    const productName = typeof product.name === 'string' 
+      ? product.name 
+      : product.name?.fr || product.name?.ar || '';
+    return productName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   if (isLoading) {
     return (
