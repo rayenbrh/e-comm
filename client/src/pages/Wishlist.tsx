@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Trash2, ShoppingCart, Heart, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
+import { useLocalizedText } from '@/utils/multilingual';
 
 export const Wishlist = () => {
   const navigate = useNavigate();
@@ -119,7 +120,7 @@ export const Wishlist = () => {
                   <Link to={`/products/${product._id}`} className="relative block aspect-square overflow-hidden bg-gray-100 dark:bg-[#3a0f17]">
                     <motion.img
                       src={getImageUrl(product.images?.[0])}
-                      alt={product.name}
+                      alt={useLocalizedText(product.name)}
                       className="w-full h-full object-cover"
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.4 }}
@@ -171,7 +172,7 @@ export const Wishlist = () => {
                   <div className="p-4">
                     <Link to={`/products/${product._id}`}>
                       <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white line-clamp-2 group-hover:text-burgundy-600 dark:group-hover:text-burgundy-500 transition">
-                        {product.name}
+                        {useLocalizedText(product.name)}
                       </h3>
                     </Link>
 

@@ -4,6 +4,7 @@ export const fr = {
   nav: {
     home: 'Accueil',
     products: 'Produits',
+    packs: 'Packs',
     categories: 'Catégories',
     about: 'À propos',
     cart: 'Panier',
@@ -171,6 +172,17 @@ export const fr = {
     loadingProducts: 'Chargement des produits...',
     previous: 'Précédent',
     next: 'Suivant',
+  },
+  // Packs
+  packs: {
+    title: 'Nos Packs',
+    description: 'Découvrez nos packs promotionnels avec des réductions exceptionnelles',
+    featured: 'En vedette',
+    product: 'produit',
+    products: 'produits',
+    viewDetails: 'Voir les détails',
+    noPacks: 'Aucun pack disponible',
+    noPacksDescription: 'Il n\'y a pas de packs disponibles pour le moment. Revenez bientôt !',
   },
   // Pack Detail
   packDetail: {

@@ -162,7 +162,7 @@ export const getProductById = async (req, res) => {
  */
 export const createProduct = async (req, res) => {
   try {
-    const { 
+    let { 
       name, 
       description, 
       price, 
@@ -177,6 +177,22 @@ export const createProduct = async (req, res) => {
       variantAttributes,
       variants
     } = req.body;
+
+    // Parse multilingual name and description if they are JSON strings
+    if (typeof name === 'string' && name.startsWith('{')) {
+      try {
+        name = JSON.parse(name);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
+    if (typeof description === 'string' && description.startsWith('{')) {
+      try {
+        description = JSON.parse(description);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
 
     // Verify category exists
     const categoryExists = await Category.findById(category);
@@ -295,7 +311,7 @@ export const createProduct = async (req, res) => {
  */
 export const updateProduct = async (req, res) => {
   try {
-    const { 
+    let { 
       name, 
       description, 
       price, 
@@ -311,6 +327,22 @@ export const updateProduct = async (req, res) => {
       variantAttributes,
       variants
     } = req.body;
+
+    // Parse multilingual name and description if they are JSON strings
+    if (typeof name === 'string' && name.startsWith('{')) {
+      try {
+        name = JSON.parse(name);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
+    if (typeof description === 'string' && description.startsWith('{')) {
+      try {
+        description = JSON.parse(description);
+      } catch (e) {
+        // If parsing fails, keep as string (backward compatibility)
+      }
+    }
 
     const product = await Product.findById(req.params.id);
 

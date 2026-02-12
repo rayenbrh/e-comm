@@ -41,10 +41,15 @@ export interface VariantAttribute {
   values: string[]; // e.g., ["Red", "Blue", "Green"]
 }
 
+export interface MultilingualText {
+  fr: string;
+  ar: string;
+}
+
 export interface Product {
   _id: string;
-  name: string;
-  description: string;
+  name: string | MultilingualText; // Support both string (backward compatibility) and multilingual
+  description: string | MultilingualText; // Support both string (backward compatibility) and multilingual
   price: number;
   oldPrice?: number | null;
   promoPrice?: number | null;

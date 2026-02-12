@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, User, Menu, Sun, Moon, LogOut, Heart, Globe } from 'lucide-react';
+import { ShoppingCart, User, Menu, Sun, Moon, LogOut, Heart, Globe, Gift } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -32,6 +32,7 @@ export const Navbar = () => {
   const navLinks = [
     { path: '/', label: t('nav.home') },
     { path: '/products', label: t('nav.products') },
+    { path: '/packs', label: t('nav.packs'), icon: Gift },
     { path: '/categories', label: t('nav.categories') },
     { path: '/about', label: t('nav.about') },
   ];
@@ -63,29 +64,33 @@ export const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="relative group"
-                >
-                  <span
-                    className={`text-base font-medium transition-colors ${
-                      isActive(link.path)
-                        ? 'text-yellow-600 dark:text-yellow-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400'
-                    }`}
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="relative group flex items-center gap-2"
                   >
-                    {link.label}
-                  </span>
-                  {isActive(link.path) && (
-                    <motion.div
-                      layoutId="navbar-indicator"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-yellow-600 dark:bg-yellow-400"
-                    />
-                  )}
-                </Link>
-              ))}
+                    {Icon && <Icon size={18} />}
+                    <span
+                      className={`text-base font-medium transition-colors ${
+                        isActive(link.path)
+                          ? 'text-yellow-600 dark:text-yellow-400'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400'
+                      }`}
+                    >
+                      {link.label}
+                    </span>
+                    {isActive(link.path) && (
+                      <motion.div
+                        layoutId="navbar-indicator"
+                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-yellow-600 dark:bg-yellow-400"
+                      />
+                    )}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Actions */}

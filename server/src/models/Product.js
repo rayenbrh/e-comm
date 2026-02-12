@@ -2,13 +2,34 @@ import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema({
   name: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: [true, 'Product name is required'],
-    trim: true,
+    validate: {
+      validator: function(v) {
+        // Allow both old string format (backward compatibility) and new multilingual format
+        if (typeof v === 'string') return true;
+        if (typeof v === 'object' && v !== null) {
+          return (v.fr && typeof v.fr === 'string') || (v.ar && typeof v.ar === 'string');
+        }
+        return false;
+      },
+      message: 'Product name must be a string or an object with fr and/or ar properties'
+    }
   },
   description: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
     required: [true, 'Product description is required'],
+    validate: {
+      validator: function(v) {
+        // Allow both old string format (backward compatibility) and new multilingual format
+        if (typeof v === 'string') return true;
+        if (typeof v === 'object' && v !== null) {
+          return (v.fr && typeof v.fr === 'string') || (v.ar && typeof v.ar === 'string');
+        }
+        return false;
+      },
+      message: 'Product description must be a string or an object with fr and/or ar properties'
+    }
   },
   price: {
     type: Number,
@@ -113,7 +134,26 @@ const productSchema = new mongoose.Schema({
 });
 
 // Index for search optimization
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+// Note: Text index works with string fields, so we'll need to handle multilingual search differently
+productSchema.index({ tags: 'text' });
+
+// Virtual for getting name as string (for backward compatibility)
+productSchema.virtual('nameString').get(function() {
+  if (typeof this.name === 'string') return this.name;
+  if (typeof this.name === 'object' && this.name !== null) {
+    return this.name.fr || this.name.ar || '';
+  }
+  return '';
+});
+
+// Virtual for getting description as string (for backward compatibility)
+productSchema.virtual('descriptionString').get(function() {
+  if (typeof this.description === 'string') return this.description;
+  if (typeof this.description === 'object' && this.description !== null) {
+    return this.description.fr || this.description.ar || '';
+  }
+  return '';
+});
 
 const Product = mongoose.model('Product', productSchema);
 

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ProductCard } from '@/components/product/ProductCard';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
+import { useLocalizedText } from '@/utils/multilingual';
 import type { ProductVariant } from '@/types';
 import {
   ShoppingCart,
@@ -38,6 +39,8 @@ export const ProductDetail = () => {
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
 
   const inWishlist = product ? isInWishlist(product._id) : false;
+  const productName = product ? useLocalizedText(product.name) : '';
+  const productDescription = product ? useLocalizedText(product.description) : '';
 
   if (!id) {
     return (
@@ -79,7 +82,7 @@ export const ProductDetail = () => {
         return;
       }
       addToCart(product, quantity, selectedVariant || undefined);
-      toast.success(tWithParams('productDetail.addedToCart', { quantity: quantity.toString(), name: product.name }));
+      toast.success(tWithParams('productDetail.addedToCart', { quantity: quantity.toString(), name: productName }));
     }
   };
 
@@ -209,7 +212,7 @@ export const ProductDetail = () => {
             {t('nav.products')}
           </Link>
           <span className="text-gray-400">/</span>
-          <span className="text-gray-900 dark:text-white">{product.name}</span>
+          <span className="text-gray-900 dark:text-white">{productName}</span>
         </motion.nav>
 
         {/* Product Details */}
@@ -226,7 +229,7 @@ export const ProductDetail = () => {
                 <motion.img
                   key={selectedImage}
                   src={images[selectedImage]}
-                  alt={product.name}
+                  alt={productName}
                   className="w-full h-full object-cover"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -278,7 +281,7 @@ export const ProductDetail = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <img src={image} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                    <img src={image} alt={`${productName} ${index + 1}`} className="w-full h-full object-cover" />
                   </motion.button>
                 ))}
               </div>
@@ -292,7 +295,7 @@ export const ProductDetail = () => {
             transition={{ duration: 0.5 }}
             className="flex flex-col"
           >
-            <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{product.name}</h1>
+            <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{productName}</h1>
 
             {/* Rating & Reviews */}
             <div className="flex items-center gap-4 mb-6">
@@ -353,7 +356,7 @@ export const ProductDetail = () => {
             </div>
 
             {/* Description */}
-            <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">{product.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">{productDescription}</p>
 
             {/* Variant Selection */}
             {product.hasVariants && product.variantAttributes && product.variantAttributes.length > 0 && (

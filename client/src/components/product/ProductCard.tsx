@@ -7,6 +7,7 @@ import { useWishlistStore } from '@/stores/wishlistStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
+import { useLocalizedText } from '@/utils/multilingual';
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
   const { t, tWithParams } = useTranslation();
   const inWishlist = isInWishlist(product._id);
+  const productName = useLocalizedText(product.name);
+  const productDescription = useLocalizedText(product.description);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -75,7 +78,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         <div className="relative overflow-hidden aspect-square bg-gray-100 dark:bg-[#3a0f17]">
           <motion.img
             src={imageUrl}
-            alt={product.name}
+            alt={productName}
             className="w-full h-full object-cover"
             whileHover={{ scale: 1.1 }}
             transition={{ duration: 0.4 }}
@@ -153,12 +156,12 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
           {/* Title */}
           <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white line-clamp-2 group-hover:text-burgundy-600 dark:group-hover:text-burgundy-500 transition">
-            {product.name}
+            {productName}
           </h3>
 
           {/* Description */}
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 flex-1">
-            {product.description}
+            {productDescription}
           </p>
 
           {/* Rating */}

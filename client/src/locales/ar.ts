@@ -4,6 +4,7 @@ export const ar = {
   nav: {
     home: 'الرئيسية',
     products: 'المنتجات',
+    packs: 'الباقات',
     categories: 'الفئات',
     about: 'من نحن',
     cart: 'السلة',
@@ -171,6 +172,17 @@ export const ar = {
     loadingProducts: 'جاري تحميل المنتجات...',
     previous: 'السابق',
     next: 'التالي',
+  },
+  // Packs
+  packs: {
+    title: 'باقاتنا',
+    description: 'اكتشف باقاتنا الترويجية مع خصومات استثنائية',
+    featured: 'مميز',
+    product: 'منتج',
+    products: 'منتجات',
+    viewDetails: 'عرض التفاصيل',
+    noPacks: 'لا توجد باقات متاحة',
+    noPacksDescription: 'لا توجد باقات متاحة في الوقت الحالي. تحقق مرة أخرى قريبًا!',
   },
   // Pack Detail
   packDetail: {

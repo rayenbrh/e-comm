@@ -11,6 +11,7 @@ import { AdminRoute } from './components/auth/AdminRoute';
 // Pages
 import { Home } from './pages/Home';
 import { Products } from './pages/Products';
+import { Packs } from './pages/Packs';
 import { Categories as CategoriesPage } from './pages/Categories';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -85,6 +86,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/packs" element={<Packs />} />
             <Route path="/packs/:id" element={<PackDetail />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/about" element={<About />} />

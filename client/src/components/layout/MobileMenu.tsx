@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { X, Home, ShoppingBag, Grid, User, LogIn, UserPlus, LogOut, LayoutDashboard, Heart, ShoppingCart, Info } from 'lucide-react';
+import { X, Home, ShoppingBag, Grid, User, LogIn, UserPlus, LogOut, LayoutDashboard, Heart, ShoppingCart, Info, Gift } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { useCartStore } from '@/stores/cartStore';
@@ -25,6 +25,7 @@ export const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
   const menuItems = [
     { path: '/', label: t('nav.home'), icon: Home },
     { path: '/products', label: t('nav.products'), icon: ShoppingBag },
+    { path: '/packs', label: t('nav.packs'), icon: Gift },
     { path: '/categories', label: t('nav.categories'), icon: Grid },
     { path: '/about', label: t('nav.about'), icon: Info },
   ];

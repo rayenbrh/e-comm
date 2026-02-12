@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import getImageUrl from '@/utils/imageUtils';
+import { useLocalizedText } from '@/utils/multilingual';
 import type { ProductVariant, VariantAttribute } from '@/types';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -25,8 +26,10 @@ export const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    nameFr: '',
+    nameAr: '',
+    descriptionFr: '',
+    descriptionAr: '',
     price: '',
     promoPrice: '',
     stock: '',
@@ -53,9 +56,15 @@ export const AdminProducts = () => {
   const handleOpenModal = (product?: any) => {
     if (product) {
       setEditingProduct(product);
+      // Handle both old string format and new multilingual format
+      const nameObj = typeof product.name === 'object' ? product.name : { fr: product.name || '', ar: '' };
+      const descObj = typeof product.description === 'object' ? product.description : { fr: product.description || '', ar: '' };
+      
       setFormData({
-        name: product.name,
-        description: product.description,
+        nameFr: nameObj.fr || '',
+        nameAr: nameObj.ar || '',
+        descriptionFr: descObj.fr || '',
+        descriptionAr: descObj.ar || '',
         price: product.price?.toString() || '',
         promoPrice: product.promoPrice?.toString() || '',
         stock: product.stock?.toString() || '',
@@ -73,8 +82,10 @@ export const AdminProducts = () => {
     } else {
       setEditingProduct(null);
       setFormData({
-        name: '',
-        description: '',
+        nameFr: '',
+        nameAr: '',
+        descriptionFr: '',
+        descriptionAr: '',
         price: '',
         promoPrice: '',
         stock: '',
@@ -97,8 +108,10 @@ export const AdminProducts = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
     setFormData({
-      name: '',
-      description: '',
+      nameFr: '',
+      nameAr: '',
+      descriptionFr: '',
+      descriptionAr: '',
       price: '',
       promoPrice: '',
       stock: '',
@@ -174,8 +187,17 @@ export const AdminProducts = () => {
     }
 
     const formDataToSend = new FormData();
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('description', formData.description);
+    // Send multilingual name and description as JSON objects
+    const nameObj = {
+      fr: formData.nameFr.trim(),
+      ar: formData.nameAr.trim(),
+    };
+    const descriptionObj = {
+      fr: formData.descriptionFr.trim(),
+      ar: formData.descriptionAr.trim(),
+    };
+    formDataToSend.append('name', JSON.stringify(nameObj));
+    formDataToSend.append('description', JSON.stringify(descriptionObj));
     formDataToSend.append('category', formData.category);
     formDataToSend.append('tags', formData.tags);
     formDataToSend.append('featured', formData.featured.toString());
@@ -332,11 +354,11 @@ export const AdminProducts = () => {
                         <div className="flex items-center gap-3">
                           <img
                             src={getImageUrl(product.images?.[0])}
-                            alt={product.name}
+                            alt={useLocalizedText(product.name)}
                             className="w-12 h-12 rounded-lg object-cover"
                           />
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white">{product.name}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{useLocalizedText(product.name)}</p>
                             {product.featured && (
                               <span className="text-xs text-indigo-600 dark:text-indigo-400">Featured</span>
                             )}
@@ -423,23 +445,57 @@ export const AdminProducts = () => {
         {/* Add/Edit Product Modal */}
         <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingProduct ? 'Edit Product' : 'Add Product'} size="xl">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Product Name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
+            {/* Product Name - Multilingual */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Description
+                Product Name (Français) <span className="text-red-500">*</span>
+              </label>
+              <Input
+                name="nameFr"
+                value={formData.nameFr}
+                onChange={handleInputChange}
+                required
+                placeholder="Nom du produit en français"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Product Name (العربية)
+              </label>
+              <Input
+                name="nameAr"
+                value={formData.nameAr}
+                onChange={handleInputChange}
+                placeholder="اسم المنتج بالعربية"
+                dir="rtl"
+              />
+            </div>
+            {/* Description - Multilingual */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description (Français) <span className="text-red-500">*</span>
               </label>
               <textarea
-                name="description"
-                value={formData.description}
+                name="descriptionFr"
+                value={formData.descriptionFr}
                 onChange={handleInputChange}
                 required
                 rows={3}
+                placeholder="Description du produit en français"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description (العربية)
+              </label>
+              <textarea
+                name="descriptionAr"
+                value={formData.descriptionAr}
+                onChange={handleInputChange}
+                rows={3}
+                placeholder="وصف المنتج بالعربية"
+                dir="rtl"
                 className="w-full px-4 py-2 border border-gray-300 dark:border-burgundy-600 rounded-lg bg-white dark:bg-burgundy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>

@@ -5,6 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import getImageUrl from '@/utils/imageUtils';
+import { useLocalizedText } from '@/utils/multilingual';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, X, Power, Upload } from 'lucide-react';
@@ -434,7 +435,7 @@ export const AdminPacks = () => {
                     
                     return (
                       <option key={product._id} value={product._id}>
-                        {product.name} - {priceText}
+                        {useLocalizedText(product.name)} - {priceText}
                       </option>
                     );
                   })}
@@ -463,7 +464,7 @@ export const AdminPacks = () => {
                         className="flex items-center justify-between p-2 bg-gray-50 dark:bg-[#1E0007] rounded"
                       >
                         <span className="text-sm text-gray-900 dark:text-white">
-                          {product?.name} x {item.quantity}
+                          {useLocalizedText(product?.name)} x {item.quantity}
                         </span>
                         <button
                           type="button"
