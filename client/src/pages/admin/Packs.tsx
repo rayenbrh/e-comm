@@ -5,7 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { Loader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import getImageUrl from '@/utils/imageUtils';
-import { useLocalizedText } from '@/utils/multilingual';
+import { useLocalizedText, getLocalizedText } from '@/utils/multilingual';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Package, Plus, Edit, Trash2, Search, X, Power, Upload } from 'lucide-react';
@@ -21,6 +21,9 @@ export const AdminPacks = () => {
   const deletePack = useDeletePack();
   const toggleActive = useTogglePackActive();
   const { t } = useTranslation();
+  
+  // Subscribe to language changes to trigger re-render
+  const language = useLanguageStore((state) => state.language);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPack, setEditingPack] = useState<Pack | null>(null);
@@ -310,12 +313,12 @@ export const AdminPacks = () => {
               {pack.image && (
                 <img
                   src={getImageUrl(pack.image)}
-                  alt={useLocalizedText(pack.name)}
+                  alt={getLocalizedText(pack.name)}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
               )}
               <div className="flex items-start justify-between mb-2">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{useLocalizedText(pack.name)}</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{getLocalizedText(pack.name)}</h3>
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
                     pack.active
@@ -326,7 +329,7 @@ export const AdminPacks = () => {
                   {pack.active ? t('adminPacks.active') : t('adminPacks.inactive')}
                 </span>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{useLocalizedText(pack.description)}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{getLocalizedText(pack.description)}</p>
               
               <div className="mb-4">
                 <div className="flex items-center gap-2">
